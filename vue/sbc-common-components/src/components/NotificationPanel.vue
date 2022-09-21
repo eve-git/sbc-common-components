@@ -1,122 +1,91 @@
 <template>
-  <div
-    v-if="showNotifications"
-    v-on:clickout="emitClose()"
-  >
+  <div v-if="showNotifications" v-on:clickout="emitClose()">
     <v-overlay></v-overlay>
-    <v-navigation-drawer
-      right
-      app
-      :width="440"
-    >
-      <v-app-bar
-        flat
-        outlined
-      >
+    <v-navigation-drawer right app :width="440">
+      <v-app-bar flat outlined>
         <v-toolbar-title class="toolbar-title">What's New at BC Registries</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn
-          icon
-          large
-          class="dialog-close"
-          @click="emitClose()"
-        >
+        <v-btn icon large class="dialog-close" @click="emitClose()">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-app-bar>
       <v-list flat>
-        <v-list-item-group color="primary">
-          <template v-for="(item, i) in notifications">
-            <v-list-item :key="i">
+        <v-list-group color="primary">
+          <template v-for="(item, i) in notifications" :key="i">
+            <v-list-item>
               <v-row dense>
                 <v-col class="d-flex" cols="1">
                   <span :class="!item.read && (item.priority ? 'dot-red' : 'dot-blue')">
                   </span>
                 </v-col>
                 <v-col>
-                <v-list-item-content>
-                  <v-list-item-title class="font-weight-bold list-subtitle">{{item.title}}</v-list-item-title>
-                  <v-list-item-subtitle>{{item.date}}</v-list-item-subtitle>
-                  <v-spacer></v-spacer>
-                  <v-list-item-content v-html="item.description"></v-list-item-content>
-                </v-list-item-content>
+                  <v-list-item>
+                    <v-list-item-title class="font-weight-bold list-subtitle">{{item.title}}</v-list-item-title>
+                    <v-list-item-subtitle>{{ item.date }}</v-list-item-subtitle>
+                    <v-spacer></v-spacer>
+                    // eslint-disable-next-line vue/no-v-text-v-html-on-component
+                    <v-list-item>
+                      <div v-html="item.description"/>
+                    </v-list-item>
+                  </v-list-item>
                 </v-col>
               </v-row>
             </v-list-item>
             <v-divider v-if="i < notifications.length - 1" :key="`${i}-divider`"></v-divider>
           </template>
-        </v-list-item-group>
+        </v-list-group>
       </v-list>
     </v-navigation-drawer>
-
   </div>
 </template>
 
-<script lang='ts'>
-import { Component, Emit, Prop, Vue } from 'vue-property-decorator'
-import { Notification } from '../models/notification'
-import { mapState, mapActions } from 'vuex'
-import NotificationModule from '../store/modules/notification'
+<script setup lang="ts">
+import { Notification } from 'sbc-common-components/src/models/notification'
+import NotificationModule from 'sbc-common-components/src/store/modules/notification'
+import { computed, onMounted, reactive } from 'vue'
+import { useStore } from 'vuex'
 import { getModule } from 'vuex-module-decorators'
 import 'clickout-event'
 
-@Component({
-  name: 'NotificationPanel',
-  beforeCreate () {
-    this.$store.isModuleRegistered = function (aPath: string[]) {
-      let m = (this as any)._modules.root
-      return aPath.every((p) => {
-        m = m._children[p]
-        return m
-      })
-    }
-    if (!this.$store.isModuleRegistered(['notification'])) {
-      this.$store.registerModule('notification', NotificationModule)
-    }
-    this.$options.computed = {
-      ...(this.$options.computed || {}),
-      ...mapState('notification', ['notifications'])
-    }
-    this.$options.methods = {
-      ...(this.$options.methods || {}),
-      ...mapActions('notification', ['markAsRead'])
-    }
+defineProps({
+  showNotifications: {
+    type: Boolean,
+    default: false
   }
 })
-export default class NotificationPanel extends Vue {
-  private readonly notifications!: Notification[]
 
-  /** Prop to display the dialog. */
-  @Prop() showNotifications: boolean
+const emit = defineEmits(['closeNotifications'])
 
-  @Emit('closeNotifications')
-  private async emitClose () {
+const store = useStore()
 
-  }
-
-  private async mounted () {
-    getModule(NotificationModule, this.$store)
-  }
+if (!store.hasModule('notification')) {
+  store.registerModule('notification', NotificationModule)
 }
+
+reactive({
+  notifications: computed(() => store.state.notification.notifications as Notification[])
+})
+
+onMounted(async () => {
+  getModule(NotificationModule, store)
+})
+
+const emitClose = (): void => emit('closeNotifications')
 </script>
 
 <style lang="scss" scoped>
-@import "../assets/scss/theme.scss";
+@import '~sbc-common-components/src/assets/scss/theme.scss';
 
-//$app-notification-height: calc(100vh - $app-header-height);
-//$app-notification-item-height: $app-notification-height/3;
-
-//@debug $app-notification-item-height;
-::v-deep ::-webkit-scrollbar {
+:deep(::-webkit-scrollbar) {
   width: 2px;
 }
 
-::v-deep ::-webkit-scrollbar-thumb {
+:deep(::-webkit-scrollbar-thumb) {
   background: black;
   border-radius: 20px;
 }
 
-::v-deep .v-navigation-drawer--right {
+:deep(.v-navigation-drawer--right) {
   transform: translatey($app-header-height) !important;
   height: 100vh;
 }
@@ -134,11 +103,11 @@ export default class NotificationPanel extends Vue {
   font-weight: bold;
 }
 
-::v-deep .v-btn:not(.dialog-close) .v-icon.v-icon {
+:deep(.v-btn:not(.dialog-close) .v-icon.v-icon) {
   font-size: $px-18 !important;
 }
 
-::v-deep .v-btn__content {
+:deep(.v-btn__content) {
   line-height: inherit;
 }
 

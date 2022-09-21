@@ -1,19 +1,20 @@
-import { initialize, LDFlagSet } from 'launchdarkly-js-client-sdk'
+import { initialize, type LDClient } from 'launchdarkly-js-client-sdk'
+import type { LDFlagSet } from 'launchdarkly-js-client-sdk'
 import ConfigHelper from '../util/config-helper'
 import { SessionStorageKeys } from '../util/constants'
 
 const defaultFlagSet = { 'sbc-auth': true }
 
 class LaunchDarklyService {
-  private ldClient
-  private flags: LDFlagSet
+  private ldClient!: LDClient
+  private flags!: LDFlagSet
   private static ldInstance: LaunchDarklyService
 
   public static getInstance (): LaunchDarklyService {
     return this.ldInstance || (this.ldInstance = new this())
   }
 
-  public get isFlagsAvailable (): boolean {
+  public isFlagsAvailable (): boolean {
     const ldFlags = JSON.parse(ConfigHelper.getFromSession(SessionStorageKeys.LaunchDarklyFlags) || '{}')
     let ldFlagsExists = false
     for (const key in ldFlags) {

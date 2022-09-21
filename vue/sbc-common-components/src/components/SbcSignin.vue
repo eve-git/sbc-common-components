@@ -1,110 +1,99 @@
 <template>
   <loading-screen :is-loading="isLoading"></loading-screen>
 </template>
-<script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator'
-import { Role, LoginSource, Pages } from '../util/constants'
-import KeyCloakService from '../services/keycloak.services'
-import LoadingScreen from './LoadingScreen.vue'
-import TokenService from '../services/token.services'
+
+<script setup lang="ts">
+// external
+import {  useStore } from 'vuex'
+import { ref } from 'vue'
 import { getModule } from 'vuex-module-decorators'
-import AccountModule from '../store/modules/account'
-import AuthModule from '../store/modules/auth'
-import { mapActions, mapState } from 'vuex'
-import { KCUserProfile } from '../models/KCUserProfile'
-import NavigationMixin from '../mixins/navigation-mixin'
+import { Role, LoginSource, Pages } from 'sbc-common-components/src/util/constants'
+import { KCUserProfile } from 'sbc-common-components/src/models/KCUserProfile'
+// local
+import LoadingScreen from '@/sbc-common-components/components/LoadingScreen.vue'
+import AccountModule from '@/sbc-common-components/modules/account'
+import AuthModule from '@/sbc-common-components/modules/auth'
+import KeyCloakService from '@/sbc-common-components/services/keycloak.services'
+import { useNavigation } from '@/sbc-common-components/composables'
 
-@Component({
-  components: {
-    LoadingScreen
-  },
-  beforeCreate () {
-    this.$store.isModuleRegistered = function (aPath: string[]) {
-      let m = (this as any)._modules.root
-      return aPath.every((p) => {
-        m = m._children[p]
-        return m
-      })
-    }
-    if (!this.$store.isModuleRegistered(['account'])) {
-      this.$store.registerModule('account', AccountModule)
-    }
-    if (!this.$store.isModuleRegistered(['auth'])) {
-      this.$store.registerModule('auth', AuthModule)
-    }
-    this.$options.methods = {
-      ...(this.$options.methods || {}),
-      ...mapActions('account', [
-        'loadUserInfo',
-        'syncAccount',
-        'getCurrentUserProfile',
-        'updateUserProfile'
-      ])
-    }
-  }
+const isLoading = ref(true)
+
+const props = defineProps({
+  idpHint: { type: String, default: 'bcsc'},
+  redirectUrlLoginFail: { type: String, default: '' },
+  inAuth: { type: Boolean, default: false }
 })
-export default class SbcSignin extends NavigationMixin {
-  private isLoading = true
-  @Prop({ default: 'bcsc' }) idpHint!: string
-  @Prop({ default: '' }) redirectUrlLoginFail!: string
-  @Prop({ default: false }) inAuth!: boolean;
-  private readonly loadUserInfo!: () => KCUserProfile
-  private readonly syncAccount!: () => Promise<void>
-  private readonly getCurrentUserProfile!: (isAuth: boolean) => Promise<any>
-  private readonly updateUserProfile!: () => Promise<void>
 
-  private async mounted () {
-    getModule(AccountModule, this.$store)
-    // Initialize keycloak session
-    const kcInit = KeyCloakService.initializeKeyCloak(this.idpHint, this.$store)
-    kcInit.then(async (authenticated: boolean) => {
-      if (authenticated) {
-        // eslint-disable-next-line no-console
-        console.info('[SignIn.vue]Logged in User. Init Session and Starting refreshTimer')
-        // Set values to session storage
-        await KeyCloakService.initSession()
-        // tell KeycloakServices to load the user info
-        const userInfo = await this.loadUserInfo()
+const store  = useStore()
+// set modules
+if (!store.hasModule('account')) store.registerModule('account', AccountModule)
+if (!store.hasModule('auth')) store.registerModule('auth', AuthModule)
 
-        // update user profile
-        await this.updateUserProfile()
+getModule(AccountModule, store)
+getModule(AuthModule, store)
 
-        // sync the account if there is one
-        await this.syncAccount()
+const { redirectToPath } = useNavigation()
 
-        // if not from the sbc-auth, do the checks and redirect to sbc-auth
-        if (!this.inAuth) {
-          // redirect to create account page if the user has no 'account holder' role
-          const isRedirectToCreateAccount = (userInfo.roles.includes(Role.PublicUser) && !userInfo.roles.includes(Role.AccountHolder))
+const loadUserInfo = async () => { await store.dispatch('account/loadUserInfo') }
+const updateUserProfile = async () => { await store.dispatch('account/updateUserProfile') }
+const syncAccount = async () => { await store.dispatch('account/syncAccount') }
+const getCurrentUserProfile = async (inAuth: boolean) => { 
+  await store.dispatch('account/getCurrentUserProfile', inAuth) }
 
-          const currentUser = await this.getCurrentUserProfile(this.inAuth)
+const emit = defineEmits(['sync-user-profile-ready'])
 
-          if ((userInfo?.loginSource !== LoginSource.IDIR) && !(currentUser?.userTerms?.isTermsOfUseAccepted)) {
-            console.log('[SignIn.vue]Redirecting. TOS not accepted')
-            this.redirectToPath(this.inAuth, Pages.USER_PROFILE_TERMS)
-          } else if (isRedirectToCreateAccount) {
-            console.log('[SignIn.vue]Redirecting. No Valid Role')
-            switch (userInfo.loginSource) {
-              case LoginSource.BCSC:
-                this.redirectToPath(this.inAuth, Pages.CREATE_ACCOUNT)
-                break
-              case LoginSource.BCEID:
-                this.redirectToPath(this.inAuth, Pages.CHOOSE_AUTH_METHOD)
-                break
-            }
+// Initialize keycloak session
+const kcInit = KeyCloakService.initializeKeyCloak(props.idpHint, store)
+kcInit
+  .then(async (authenticated: boolean) => {
+    if (authenticated) {
+      // eslint-disable-next-line no-console
+      console.info(
+        '[SignIn.vue]Logged in User. Init Session and Starting refreshTimer'
+      )
+      // Set values to session storage
+      await KeyCloakService.initSession()
+      // tell KeycloakServices to load the user info
+      await loadUserInfo()
+      const userInfo = store.state.account.currentUser as KCUserProfile
+      // update user profile
+      await updateUserProfile()
+      // sync the account if there is one
+      await syncAccount()
+      // if not from the sbc-auth, do the checks and redirect to sbc-auth
+      if (!props.inAuth) {
+        // redirect to create account page if the user has no 'account holder' role
+        const isRedirectToCreateAccount =
+          userInfo.roles.includes(Role.PublicUser) &&
+          !userInfo.roles.includes(Role.AccountHolder)
+        await getCurrentUserProfile(props.inAuth)
+        const currentUser =  store.state.account.currentUser as any        
+        if (
+          userInfo?.loginSource !== LoginSource.IDIR &&
+          !currentUser?.userTerms?.isTermsOfUseAccepted
+        ) {
+          console.log('[SignIn.vue]Redirecting. TOS not accepted')
+          //redirectToPath(props.inAuth, Pages.USER_PROFILE_TERMS)
+        } else if (isRedirectToCreateAccount) {
+          console.log('[SignIn.vue]Redirecting. No Valid Role')
+          switch (userInfo.loginSource) {
+            case LoginSource.BCSC:
+              redirectToPath(props.inAuth, Pages.CREATE_ACCOUNT)
+              break
+            case LoginSource.BCEID:
+              redirectToPath(props.inAuth, Pages.CHOOSE_AUTH_METHOD)
+              break
           }
         }
-
-        this.$emit('sync-user-profile-ready')
       }
-    }).catch(() => {
-      if (this.redirectUrlLoginFail) {
-        window.location.assign(decodeURIComponent(this.redirectUrlLoginFail))
-      }
-    })
-  }
-}
+      emit('sync-user-profile-ready')
+    }
+  })
+  .catch(() => {
+    if (props.redirectUrlLoginFail) {
+      window.location.assign(decodeURIComponent(props.redirectUrlLoginFail))
+    }
+  })
 </script>
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>

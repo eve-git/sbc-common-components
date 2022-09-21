@@ -20,7 +20,10 @@
       <template v-else>
         <h1 class="view-header__title">Log in to BC Registries</h1>
         <p class="mt-4 mb-0">
-          Don't have a BC Registries account? <a class="text-decoration-underline" @click="goToCreateAccount">Create an account</a>
+          Don't have a BC Registries account?
+          <a class="text-decoration-underline" @click="goToCreateAccount"
+            >Create an account</a
+          >
         </p>
       </template>
     </div>
@@ -41,13 +44,13 @@
         >
           <div class="account-type d-flex flex-column">
             <div class="account-type__icon mb-8">
-              <v-icon>{{authOption.icon}}</v-icon>
+              <v-icon>{{ authOption.icon }}</v-icon>
             </div>
             <div class="account-type__title mb-6">
-              {{authOption.title}}
+              {{ authOption.title }}
             </div>
             <div class="account-type__details mb-12">
-              {{authOption.description}}
+              {{ authOption.description }}
             </div>
             <div>
               <v-btn
@@ -68,103 +71,112 @@
   </v-container>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Emit } from 'vue-property-decorator'
+<script setup lang="ts">
 import { IdpHint, LoginSource, Pages } from '../util/constants'
-import NavigationMixin from '../mixins/navigation-mixin'
 
-@Component({})
-export default class SbcAuthenticationOptions extends NavigationMixin {
-  @Prop({ default: '' }) redirectUrl!: string
-  @Prop({ default: false }) inAuth!: boolean
-  @Prop({ default: false }) isDialog!: boolean
-
-  private authOptions = [
-    {
-      type: LoginSource.BCSC,
-      title: 'BC Services Card',
-      description: `Residents of British Columbia can use their government-issued
-                BC Services Card to securly access BC Registries.`,
-      icon: 'mdi-account-card-details-outline',
-      btnLabel: 'Log in with BC Services Card',
-      idpHint: IdpHint.BCSC
-    },
-    {
-      type: LoginSource.BCEID,
-      title: 'BCeID',
-      description: `Non-BC residents and residents do not have a BC Services Card
-                can use a BCeID account to securly access BC Registries.`,
-      icon: 'mdi-two-factor-authentication',
-      btnLabel: 'Log in with BCeID',
-      idpHint: IdpHint.BCEID
-    }
-  ]
-
-  private selectAuthType (authOption) {
-    let signinRoute = `${Pages.SIGNIN}/${authOption.idpHint}`
-    if (this.redirectUrl?.trim()) {
-      signinRoute += `/${encodeURIComponent(this.redirectUrl.trim())}`
-    }
-    this.redirectInTriggeredApp(signinRoute)
+const props = defineProps({
+  redirectUrl: {
+    type: String,
+    default: ''
+  },
+  inAuth: {
+    type: Boolean,
+    default: false
+  },
+  isDialog: {
+    type: Boolean,
+    default: false
   }
+})
 
-  private goToCreateAccount () {
-    this.redirectToPath(this.inAuth, Pages.CHOOSE_AUTH_METHOD)
+const emit = defineEmits(['close'])
+
+const authOptions = [
+  {
+    type: LoginSource.BCSC,
+    title: 'BC Services Card',
+    description: `Residents of British Columbia can use their government-issued
+              BC Services Card to securly access BC Registries.`,
+    icon: 'mdi-account-card-details-outline',
+    btnLabel: 'Log in with BC Services Card',
+    idpHint: IdpHint.BCSC
+  },
+  {
+    type: LoginSource.BCEID,
+    title: 'BCeID',
+    description: `Non-BC residents and residents do not have a BC Services Card
+              can use a BCeID account to securly access BC Registries.`,
+    icon: 'mdi-two-factor-authentication',
+    btnLabel: 'Log in with BCeID',
+    idpHint: IdpHint.BCEID
   }
+]
 
-  /**
-   * Emits an event to the parent to close.
-   */
-  @Emit('close')
-  private emitClose (): void {}
+const selectAuthType = (authOption) => {
+  let signinRoute = `${Pages.SIGNIN}/${authOption.idpHint}`
+  if (props.redirectUrl?.trim()) {
+    signinRoute += `/${encodeURIComponent(props.redirectUrl.trim())}`
+  }
+  props.redirectInTriggeredApp(signinRoute)
+}
+
+const goToCreateAccount = () => {
+  props.redirectToPath(props.inAuth, Pages.CHOOSE_AUTH_METHOD)
+}
+
+/**
+ * Emits an event to the parent to close.
+ */
+const emitClose = (): void => {
+  emit('close')
 }
 </script>
 
 <style lang="scss" scoped>
-  .view-container {
-    max-width: 60rem;
-  }
+.view-container {
+  max-width: 60rem;
+}
 
-  .account-card {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    transition: all ease-out 0.2s;
+.account-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all ease-out 0.2s;
 
-    &:hover {
-      border-color: var(--v-primary-base) !important;
+  &:hover {
+    border-color: var(--v-primary-base) !important;
 
-      .v-icon {
-        color: var(--v-primary-base) !important;
-      }
+    .v-icon {
+      color: var(--v-primary-base) !important;
     }
   }
+}
 
-  .theme--light.v-card.v-card--outlined.active {
-    border-color: var(--v-primary-base);
-  }
+.theme--light.v-card.v-card--outlined.active {
+  border-color: var(--v-primary-base);
+}
 
-  .account-card .v-icon {
-    color: var(--v-primary-base) !important;
-    font-size: 3rem !important;
-  }
+.account-card .v-icon {
+  color: var(--v-primary-base) !important;
+  font-size: 3rem !important;
+}
 
-  .account-type {
-    flex: 1 1 auto;
-  }
+.account-type {
+  flex: 1 1 auto;
+}
 
-  .account-type__icon {
-    flex: 0 0 auto;
-  }
+.account-type__icon {
+  flex: 0 0 auto;
+}
 
-  .account-type__title {
-    flex: 0 0 auto;
-    line-height: 1.75rem;
-    font-size: 1.5rem;
-    font-weight: 700;
-  }
+.account-type__title {
+  flex: 0 0 auto;
+  line-height: 1.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
 
-  .account-type__details {
-    flex: 1 1 auto;
-  }
+.account-type__details {
+  flex: 1 1 auto;
+}
 </style>

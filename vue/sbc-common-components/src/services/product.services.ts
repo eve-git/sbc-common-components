@@ -1,7 +1,8 @@
-import Axios, { AxiosResponse } from 'axios'
+import Axios from 'axios'
+import type { AxiosResponse } from 'axios'
 import ConfigHelper from '../util/config-helper'
 import { addAxiosInterceptors } from '../util/interceptors'
-import { Products } from '../models/product'
+import type { Products } from '../models/product'
 
 const axios = addAxiosInterceptors(Axios.create())
 

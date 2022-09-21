@@ -1,11 +1,11 @@
-import { AxiosInstance } from 'axios'
+import type { AxiosInstance } from 'axios'
 import ConfigHelper from './config-helper'
 import { SessionStorageKeys } from './constants'
 
 export function addAxiosInterceptors (axiosInstance: AxiosInstance): AxiosInstance {
   axiosInstance.interceptors.request.use(config => {
     const token = ConfigHelper.getFromSession(SessionStorageKeys.KeyCloakToken)
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
     return config

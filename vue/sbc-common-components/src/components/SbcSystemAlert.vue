@@ -7,7 +7,7 @@
   ></sbc-system-banner>
 </template>
 
-<script lang='ts'>
+<script setup lang='ts'>
 import VueI18n from 'vue-i18n'
 import { getBoolean } from '../util/common-util'
 import { OutageMessages } from '../util/enums'
@@ -32,32 +32,32 @@ const i18n = new VueI18n({
   messages
 })
 
-@Component({
-  components: {
-    SbcSystemBanner
-  },
-  i18n
-})
-export default class SbcSystemAlert extends Vue {
-  @Prop({ default: [] })
-  private serviceData: { serviceName: string, serviceNameDesc: string }[]
-
-  @Prop({ default: '' })
-  private statusURL: string
-
-  /* class properties */
-  private isSbcSystemDown: boolean = false
-  private alertMessage: string = ''
-
-  private mounted (): void {
-    StatusServices.getServiceStatus(this.serviceData['serviceName'])
-      .then((response) => {
-        this.isSbcSystemDown = !getBoolean(response.data && response.data.currentStatus)
-        if (this.isSbcSystemDown) {
-          this.alertMessage = this.$t(OutageMessages.outage, { serviceName: this.serviceData['serviceNameDesc'] }).toString()
-        }
-      })
-  }
+interface ServiceData {
+  serviceName: string
+  serviceStatusDesc: string
 }
 
+const props = defineProps({
+  serviceData: {
+    type: ServiceData[],
+    default: []
+  },
+  statusUrl: {
+    type: String,
+    default: ''
+  }
+})
+
+const isSbcSystemDown = ref<boolean>(false)
+const alertMessage = ref<string>('')
+
+onMounted(async () => {
+  StatusServices.getServiceStatus(this.serviceData['serviceName'])
+    .then((response) => {
+      isSbcSystemDown.value = !getBoolean(response.data && response.data.currentStatus)
+      if (isSbcSystemDown.value) {
+        alertMessage.value = this.$t(OutageMessages.outage, { serviceName: props.serviceData['serviceNameDesc'] }).toString()
+      }
+    })
+})
 </script>

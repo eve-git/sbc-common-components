@@ -1,21 +1,24 @@
-import Vue from 'vue'
-import Vuetify, {
-  VAlert,
-  VContainer,
-  VIcon,
-  VBtn
-} from 'vuetify/lib'
+import 'vuetify/styles' // Global CSS has to be imported
+import { createVuetify } from 'vuetify'
 
-Vue.use(Vuetify, {
-  components: {
-    VAlert,
-    VContainer,
-    VIcon,
-    VBtn
-  }
-})
+// import Vue from 'vue'
+// import Vuetify, {
+//   VAlert,
+//   VContainer,
+//   VIcon,
+//   VBtn
+// } from 'vuetify/lib'
 
-export default new Vuetify({
+// Vue.use(Vuetify, {
+//   components: {
+//     VAlert,
+//     VContainer,
+//     VIcon,
+//     VBtn
+//   }
+// })
+
+export const vuetify = createVuetify({
   theme: {
     options: {
       customProperties: true
@@ -56,7 +59,6 @@ export default new Vuetify({
           base: '#fcba19'
         }
       }
-
     }
   }
 })

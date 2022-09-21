@@ -1,5 +1,4 @@
-import { Action, Module, Mutation, VuexModule } from 'vuex-module-decorators'
-import { Notifications } from '../../models/notification'
+import type { Notifications } from '../../models/notification'
 import NotificationService from '../../services/notification.services'
 import ConfigHelper from '../../util/config-helper'
 import { SessionStorageKeys } from '../../util/constants'

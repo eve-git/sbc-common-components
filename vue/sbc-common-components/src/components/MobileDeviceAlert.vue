@@ -1,18 +1,17 @@
 <template>
-  <v-row justify="center">
+  <v-row justify="center" no-gutters>
     <v-dialog v-model="mobileDevice" width="350px">
       <v-card>
-
-         <v-btn
-            icon
-            color="primary"
-            :right="true"
-            :absolute="true"
-            @click="mobileDevice = false"
-            class="mt-1"
-          >
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
+        <v-btn
+          icon
+          color="primary"
+          :right="true"
+          :absolute="true"
+          @click="mobileDevice = false"
+          class="mt-1"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
         <v-card-title class="justify-center pb-0">
           <v-icon color="red" x-large>mdi-alert-circle-outline</v-icon>
         </v-card-title>
@@ -36,36 +35,23 @@
         </v-card-text>
         <v-card-actions class="justify-center pt-0">
           <v-btn text class="mobile-alert-ok-btn" @click="mobileDevice = false"
-            >OK</v-btn>
+            >OK</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
   </v-row>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator'
+<script setup lang="ts">
+import { onMounted, ref } from 'vue'
 
-@Component({})
-export default class MobileDeviceAlert extends Vue {
-  private mobileDevice: boolean = false
-
-  private isMobileDevice (): boolean {
-    if (
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      )
-    ) {
-      return true
-    }
-
-    return false
+const mobileDevice = ref(false)
+onMounted(() => {
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+    mobileDevice.value = true
   }
-
-  private async mounted () {
-    this.mobileDevice = this.isMobileDevice()
-  }
-}
+})
 </script>
 
 <style lang="scss" scoped>

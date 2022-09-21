@@ -1,5 +1,5 @@
 import Axios from 'axios'
-import { Fee, FilingData, PayData } from '../models'
+import type { Fee, FilingData, PayData } from '../models'
 import ConfigHelper from '../util/config-helper'
 import { SessionStorageKeys } from '../util/constants'
 

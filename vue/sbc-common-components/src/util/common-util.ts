@@ -40,7 +40,7 @@ export function decodeKCToken () {
   }
 }
 
-export function trimTrailingSlashURL (url) {
+export function trimTrailingSlashURL (url: string) {
   return (url) ? url.trim().replace(/\/+$/, '') : ''
 }
 
@@ -49,7 +49,7 @@ export function getAccountIdFromCurrentUrl () {
   return urlParams.get(ACCOUNT_ID) || false
 }
 
-export function checkAndAppend (url, key = '', value = '') {
+export function checkAndAppend (url: string, key = '', value = '') {
   const separator = (/\?/).test(url) ? '&' : '?'
   // remove key from URL  if existing
   const newUrl = removeAccountIdFromUrl(url, key)
@@ -58,13 +58,13 @@ export function checkAndAppend (url, key = '', value = '') {
 
 // if account id is not passed, will get it from session
 // there are some cases we need to pass account id, ie  to watch account id and get URL dynamically
-export function appendAccountId (url, accountId = '') {
+export function appendAccountId (url: string, accountId = '') {
   const sessionAccountId = JSON.parse(ConfigHelper.getFromSession(SessionStorageKeys.CurrentAccount) || '{}').id || ''
   const currentAccount = accountId !== '' ? accountId : sessionAccountId
   return checkAndAppend(url, ACCOUNT_ID, currentAccount)
 }
 
-export function removeAccountIdFromUrl (url, key = ACCOUNT_ID) {
+export function removeAccountIdFromUrl (url: string, key = ACCOUNT_ID) {
   // replacing account id and formattig ie, removing extra ? or &
   return url.replace(new RegExp(key + '=\\w+'), '').replace('?&', '?').replace(/\?$/, '')
     .replace('&&', '&').replace(/&$/, '')

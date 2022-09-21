@@ -55,8 +55,7 @@
   </v-expand-transition>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue, Mixins } from 'vue-property-decorator'
+<script setup lang="ts">
 import { NavigationBarConfig, NavigationMenuItem } from '../models/NavigationBarConfig'
 import { getModule } from 'vuex-module-decorators'
 import { mapState, mapGetters } from 'vuex'
@@ -90,6 +89,7 @@ import { UserSettings } from '../models/userSettings'
     }
   }
 })
+
 export default class NavigationBar extends Vue {
   private readonly currentAccount!: UserSettings | null
   private readonly isAuthenticated!: boolean
@@ -108,61 +108,61 @@ export default class NavigationBar extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  @import '../assets/scss/theme.scss';
+@import '../assets/scss/theme.scss';
 
-  .toolbar-container {
-    border-top: 1px solid $BCgovBlue4;
+.toolbar-container {
+  border-top: 1px solid $BCgovBlue4;
+}
+
+.v-toolbar__title {
+  margin-top: -0.2rem;
+  margin-right: 2rem;
+  font-size: 1.2857rem;
+  font-weight: 700;
+
+  a {
+    display: block;
+    color: #ffffff;
+    text-decoration: none;
   }
+}
 
+@media (min-width: 960px) {
   .v-toolbar__title {
-    margin-top: -0.2rem;
-    margin-right: 2rem;
-    font-size: 1.2857rem;
-    font-weight: 700;
-
-    a {
-      display: block;
-      color: #ffffff;
-      text-decoration: none;
-    }
+    font-size: 1.125rem;
   }
+}
 
-  @media (min-width: 960px) {
-    .v-toolbar__title {
-      font-size: 1.125rem;
-    }
-  }
+.nav-small .v-toolbar__title {
+  margin-right: auto;
+}
 
-  .nav-small .v-toolbar__title {
-    margin-right: auto;
-  }
+::v-deep .v-toolbar__content {
+  max-width: 1360px;
+  margin: 0 auto;
+}
 
-  ::v-deep .v-toolbar__content {
-    max-width: 1360px;
-    margin: 0 auto;
-  }
+.v-btn {
+  font-weight: 400;
+}
 
-  .v-btn {
-    font-weight: 400;
-  }
+.v-btn.menu-btn {
+  font-weight: 700;
+}
 
-  .v-btn.menu-btn {
-    font-weight: 700;
-  }
+.v-list {
+  border-radius: 0 !important;
+}
 
-  .v-list {
-    border-radius: 0 !important;
-  }
+.theme--dark.v-btn--active:before,
+.theme--dark.v-btn--active:hover:before {
+  //border-bottom: 3px solid $BCgovGold5;
+  background-color: $BCgovBlue3;
+  opacity: 0.5;
+}
 
-  .theme--dark.v-btn--active:before,
-  .theme--dark.v-btn--active:hover:before {
-    //border-bottom: 3px solid $BCgovGold5;
-    background-color: $BCgovBlue3;
-    opacity: 0.5;
-  }
-
-  .theme--dark.v-btn:focus:before {
-    background-color: $BCgovBlue3;
-    opacity: 0.5;
-  }
+.theme--dark.v-btn:focus:before {
+  background-color: $BCgovBlue3;
+  opacity: 0.5;
+}
 </style>

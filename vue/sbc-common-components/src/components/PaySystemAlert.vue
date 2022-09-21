@@ -7,51 +7,17 @@
   ></sbc-system-banner>
 </template>
 
-<script lang='ts'>
+<script setup lang='ts'>
 import { Component, Vue } from 'vue-property-decorator'
 import SbcSystemBanner from './SbcSystemBanner.vue'
-import StatusModule from '../store/modules/status'
-import { getModule } from 'vuex-module-decorators'
 import { ServiceStatus } from '../models/ServiceStatus'
-import { mapState, mapActions } from 'vuex'
 
-declare module 'vuex' {
-  interface Store<S> {
-    hasModule(_: string[]): boolean
-  }
-}
+const statusAPIResponse = ref<ServiceStatus>(null)
+const paySystemStatus = computed(() => statusStore.state.paySystemStatus) // mapState('status', ['paySystemStatus'])
+const fetchPaySystemStatus = computed(() => statusStore.actions.fetchPaySystemStatus))) // mapActions('status', ['fetchPaySystemStatus'])
 
-@Component({
-  components: {
-    SbcSystemBanner
-  },
-  beforeCreate () {
-    this.$store.isModuleRegistered = function (aPath: string[]) {
-      let m = (this as any)._modules.root
-      return aPath.every((p) => {
-        m = m._children[p]
-        return m
-      })
-    }
-    if (!this.$store.isModuleRegistered(['status'])) {
-      this.$store.registerModule('status', StatusModule)
-    }
-    this.$options.computed = {
-      ...(this.$options.computed || {}),
-      ...mapState('status', ['paySystemStatus'])
-    }
-    this.$options.methods = {
-      ...(this.$options.methods || {}),
-      ...mapActions('status', ['fetchPaySystemStatus'])
-    }
-  }
-})
-export default class PaySystemAlert extends Vue {
-  private statusAPIResponse : ServiceStatus | null = null
-  private readonly paySystemStatus!: ServiceStatus
-  private readonly fetchPaySystemStatus!: () => Promise<ServiceStatus>
-  private getBoolean (value: boolean | string | number): boolean {
-    var resultVal = value
+const getBoolean () (value: boolean | string | number): boolean {
+    let resultVal = value
     if (typeof value === 'string') {
       resultVal = value.toLowerCase()
     }
@@ -67,25 +33,23 @@ export default class PaySystemAlert extends Vue {
       default:
         return false
     }
-  }
-
-  private async mounted () {
-    getModule(StatusModule, this.$store)
-    try {
-      this.statusAPIResponse = await this.fetchPaySystemStatus()
-    } catch (error) {
-      this.statusAPIResponse = null
-    }
-  }
-
-  private get alertMessage () {
-    return this.paySystemStatus?.customMessage ? this.paySystemStatus.customMessage : this.paySystemStatus.message
-  }
-
-  private get hasPayMessage () {
-    return this.statusAPIResponse && (!this.getBoolean(this.paySystemStatus?.currentStatus) || this.paySystemStatus?.customMessage)
-  }
 }
+
+onMounted(() => {
+  try {
+    statusAPIResponse.value = await this.fetchPaySystemStatus()
+  } catch (error) {
+    statusAPIResponse.value = null
+  }
+})
+
+const alertMessage = () => computed(() => {
+  return paySystemStatus.value?.customMessage ? paySystemStatus.value.customMessage : paySystemStatus.value.message
+})
+
+const hasPayMessage = () => computed(() => {
+  return statusAPIResponse.value && (!getBoolean(paySystemStatus.value?.currentStatus) || paySystemStatus.value?.customMessage)
+})
 </script>
 
 <style lang="scss" scoped>

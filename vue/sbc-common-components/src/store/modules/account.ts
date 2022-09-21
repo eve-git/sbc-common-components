@@ -1,69 +1,51 @@
 import { Action, Module, Mutation, VuexModule } from 'vuex-module-decorators'
 import AccountService from '../../services/account.services'
-import { Member } from '../../models/member'
-import { UserSettings } from '../../models/userSettings'
-import { KCUserProfile } from '../../models/KCUserProfile'
+import type { Member } from '../../models/member'
+import type { UserSettings } from '../../models/userSettings'
+import type { KCUserProfile } from '../../models/KCUserProfile'
 import KeyCloakService from '../../services/keycloak.services'
 import ConfigHelper from '../../util/config-helper'
 import { SessionStorageKeys, LoginSource, Role } from '../../util/constants'
 import UserService from '../../services/user.services'
 import { getAccountIdFromCurrentUrl } from '../../util/common-util'
+import { defineStore } from 'pinia'
 
-@Module({
-  name: 'account',
-  namespaced: true
+interface AccountState {
+  userSettings: UserSettings[]
+  currentAccount: UserSettings | null,
+  currentAccountMembership: Member | null,
+  pendingApprovalCount: number,
+  currentUser: KCUserProfile | null
+}
+
+
+export const useAccountStore = defineStore('account', {
+  state: (): AccountState => ({
+    userSettings: [],
+    currentAccount: null,
+    currentAccountMembership: null,
+    pendingApprovalCount: 0,
+    currentUser: null
+  }),
+  getters: {
+    accountName: (state) => state.currentAccount && state.currentAccount.label,
+    switchableAccounts: (state) => state.userSettings.filter(userSetting => userSetting.type === 'ACCOUNT'),
+    userName: (state) => `${state.currentUser?.firstName || '-'} ${state.currentUser?.lastName || ''}`
+  },
+  actions: {
+    setCurrentAccount(userSetting: UserSettings) {
+      ConfigHelper.addToSession(SessionStorageKeys.CurrentAccount, JSON.stringify(userSetting))
+      this.currentAccount = userSetting
+    },
+    loadUserInfo() { this.currentUser = KeyCloakService.getUserInfo() },
+    async syncUserSettings (currentAccountId: string) {
+      
+    }
+  }
 })
-export default class AccountModule extends VuexModule {
-  userSettings: UserSettings[] = []
-  currentAccount: UserSettings | null = null
-  currentAccountMembership: Member | null = null
-  pendingApprovalCount = 0
-  currentUser: KCUserProfile | null = null
 
-  get accountName () {
-    return this.currentAccount && this.currentAccount.label
-  }
 
-  get switchableAccounts () {
-    return this.userSettings && this.userSettings.filter(setting => setting.type === 'ACCOUNT')
-  }
-
-  get username (): string {
-    return `${this.currentUser?.firstName || '-'} ${this.currentUser?.lastName || ''}`
-  }
-
-  @Mutation
-  public setCurrentUser (currentUser: KCUserProfile) {
-    this.currentUser = currentUser
-  }
-
-  @Mutation
-  public setUserSettings (userSetting: UserSettings[]): void {
-    this.userSettings = userSetting
-  }
-
-  @Mutation
-  public setCurrentAccount (userSetting: UserSettings): void {
-    ConfigHelper.addToSession(SessionStorageKeys.CurrentAccount, JSON.stringify(userSetting))
-    this.currentAccount = userSetting
-  }
-
-  @Mutation
-  public setPendingApprovalCount (count: number): void {
-    this.pendingApprovalCount = count
-  }
-
-  @Mutation
-  public setCurrentAccountMembership (membership: Member): void {
-    this.currentAccountMembership = membership
-  }
-
-  @Action({ rawError: true, commit: 'setCurrentUser' })
-  public loadUserInfo () {
-    // Load User Info
-    return KeyCloakService.getUserInfo()
-  }
-
+  
   @Action({ rawError: true, commit: 'setUserSettings' })
   public async syncUserSettings (currentAccountId: string): Promise<UserSettings[]> {
     const response = await AccountService.getUserSettings(this.currentUser?.keycloakGuid)

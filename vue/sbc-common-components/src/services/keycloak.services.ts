@@ -1,8 +1,9 @@
-import Keycloak, { KeycloakInitOptions, KeycloakInstance, KeycloakLoginOptions, KeycloakTokenParsed } from 'keycloak-js'
-import { KCUserProfile } from '../models/KCUserProfile'
+import Keycloak from 'keycloak-js'
+import type  { KeycloakInitOptions, KeycloakInstance, KeycloakLoginOptions } from 'keycloak-js'
+import type { KCUserProfile } from '../models/KCUserProfile'
 import ConfigHelper from '../util/config-helper'
 import { SessionStorageKeys } from '../util/constants'
-import { Store } from 'vuex'
+import type { Store } from 'vuex'
 import { getModule } from 'vuex-module-decorators'
 import AuthModule from '../store/modules/auth'
 import { decodeKCToken } from '../util/common-util'
@@ -20,7 +21,7 @@ class KeyCloakService {
     return (this.instance) ? this.instance : new KeyCloakService()
   }
 
-  public get isInitialized (): boolean {
+  public isInitialized (): boolean {
     return !!this.kc
   }
 

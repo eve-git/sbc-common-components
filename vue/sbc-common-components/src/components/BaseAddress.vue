@@ -142,7 +142,7 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import Vue from 'vue'
 import { required } from 'vuelidate/lib/validators'
 import { Component, Mixins, Emit, Prop, Watch } from 'vue-property-decorator'
@@ -151,6 +151,25 @@ import { uniqueId } from 'lodash'
 import ValidationMixin from '../mixins/validation-mixin'
 import CountriesProvincesMixin from '../mixins/countries-provinces-mixin'
 
+
+const props = defineProps({
+  address: {
+    type: object,
+    default: null,
+  },
+  editing: {
+    type: Boolean,
+    default: false,
+  },
+  schema: {
+    type: any,
+    default: null,
+  },
+  noPoBox: {
+    type: Boolean,
+    default: false,
+  },
+})
 /**
  * The component for displaying and editing an address.
  * Vuelidate is used to implement the validation rules (eg, what 'required' means and whether it's satisfied).

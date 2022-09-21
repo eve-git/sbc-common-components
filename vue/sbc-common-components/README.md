@@ -1,76 +1,46 @@
-# sbc-common-components
+# sbc-common-components-vue3
 
-[![npm version](https://badge.fury.io/js/sbc-common-components.svg)](https://badge.fury.io/js/sbc-common-components)
+This template should help get you started developing with Vue 3 in Vite.
 
-[![npm:size:gzip](https://img.shields.io/bundlephobia/minzip/sbc-common-components.svg?label=npm:size:gzip)](https://bundlephobia.com/result?p=sbc-common-components)
+## Recommended IDE Setup
 
-The common components for all vue projects in SBC can reside here
+[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
 
-[visit the github page ](https://bcgov.github.io/sbc-common-components/)
+## Type Support for `.vue` Imports in TS
 
+TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
 
+If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
 
-## How to consume it
-```
-npm install sbc-common-components --save
+1. Disable the built-in TypeScript Extension
+    1) Run `Extensions: Show Built-in Extensions` from VSCode's command palette
+    2) Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
+2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
 
-and use individual components as you want
-```
+## Customize configuration
 
-### How to do local development
+See [Vite Configuration Reference](https://vitejs.dev/config/).
 
-use npm link for local dev.
-```
-go to the sbc-common-components project root 
+## Project Setup
 
-npm link
-
-Go to the client project [where this module is being used] [ie SBC-AUTH or COOPS-WEB project]
-
-npm link sbc-common-components
+```sh
+npm install
 ```
 
+### Compile and Hot-Reload for Development
 
-
-
-### How to publish in NPM
-```
-npm publish --access public
-
+```sh
+npm run dev
 ```
 
-### Lints and fixes files
+### Type-Check, Compile and Minify for Production
+
+```sh
+npm run build
 ```
+
+### Lint with [ESLint](https://eslint.org/)
+
+```sh
 npm run lint
 ```
-
-### Run your end-to-end tests
-```
-npm run test:e2e
-```
-
-### Run your unit tests
-```
-npm run test:unit
-```
-
-
-### Components
-
-
-[visit the github page ](https://bcgov.github.io/sbc-common-components/FeeCalculator/)
-
-
-
-### TODO - Pending taks
-
-
-- [ ] copy job to create licence etc for npm repo
-- [ ] write tests
-- [ ] more documentation in github page
-- [ ] handle version update by script
-- [ ] change logs
-
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
