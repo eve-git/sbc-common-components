@@ -55,56 +55,31 @@
   </v-expand-transition>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue, Mixins } from 'vue-property-decorator'
+<script setup lang="ts">
 import { NavigationBarConfig, NavigationMenuItem } from '../models/NavigationBarConfig'
-import { getModule } from 'vuex-module-decorators'
-import { mapState, mapGetters } from 'vuex'
-import ConfigHelper from '../util/config-helper'
-import { SessionStorageKeys } from '../util/constants'
-import AccountModule from '../store/modules/account'
-import AuthModule from '../store/modules/auth'
-import { UserSettings } from '../models/userSettings'
+import { computed, defineProps, PropType, ref } from 'vue'
+import { useStore } from 'vue2-helpers/vuex'
+import AccountModule from '@/store/modules/account'
+import AuthModule from '@/store/modules/auth'
 
-@Component({
-  name: 'NavigationBar',
-  beforeCreate () {
-    this.$store.isModuleRegistered = function (aPath: string[]) {
-      let m = (this as any)._modules.root
-      return aPath.every((p) => {
-        m = m._children[p]
-        return m
-      })
-    }
-    if (!this.$store.isModuleRegistered(['account'])) {
-      this.$store.registerModule('account', AccountModule)
-    }
-    if (!this.$store.isModuleRegistered(['auth'])) {
-      this.$store.registerModule('auth', AuthModule)
-    }
-    this.$options.computed = {
-      ...(this.$options.computed || {}),
-      ...mapState('auth', ['token']),
-      ...mapState('account', ['currentAccount']),
-      ...mapGetters('auth', ['isAuthenticated'])
-    }
+const accountStore = useStore<AccountModule>()
+const authStore = useStore<AuthModule>()
+
+const currentAccount = computed(() => accountStore.state.currentAccount)
+const isAuthenticated = computed(() => authStore.state.isAuthenticated)
+const props = defineProps({
+  configuration: {
+    type: Object as PropType<NavigationBarConfig>
+  },
+  hide: {
+    type: Boolean
   }
 })
-export default class NavigationBar extends Vue {
-  private readonly currentAccount!: UserSettings | null
-  private readonly isAuthenticated!: boolean
-  @Prop() configuration!: NavigationBarConfig
-  @Prop({ default: false }) hide!: boolean
-  private mobileNavDrawer = false
-
-  private get showNavBar (): boolean {
-    return !this.hide && this.configuration && this.configuration.menuItems.length > 0
-  }
-
-  private isMenuItemEnabled (menuItem: NavigationMenuItem): boolean {
-    return !(menuItem.meta.requiresAuth && !this.isAuthenticated) || (menuItem.meta.requiresAccount && !this.currentAccount)
-  }
-}
+const mobileNavDrawer = ref(false)
+const showNavBar = computed(() => !props.hide && props.configuration && props.configuration.menuItems.length > 0)
+const isMenuItemEnabled = (menuItem: NavigationMenuItem) => computed(() =>
+  !(menuItem.meta.requiresAuth && !isAuthenticated.value) || (menuItem.meta.requiresAccount && !currentAccount.value)
+)
 </script>
 
 <style lang="scss" scoped>
@@ -137,7 +112,7 @@ export default class NavigationBar extends Vue {
     margin-right: auto;
   }
 
-  ::v-deep .v-toolbar__content {
+  :deep(.v-toolbar__content) {
     max-width: 1360px;
     margin: 0 auto;
   }

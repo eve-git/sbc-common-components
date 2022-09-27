@@ -1,25 +1,24 @@
 {
   "name": "sbc-common-components",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "private": false,
   "description": "Common Vue Components to be used across BC Registries and Online Services.",
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bcgov/sbc-common-components.git"
-  },
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build --target lib --name sbc-common-lib src/components/global.js",
-    "lint": "vue-cli-service lint",
-    "lint:nofix": "vue-cli-service lint --no-fix",
-    "test:e2e": "vue-cli-service test:e2e",
-    "test:unit": "vue-cli-service test:unit --testPathPattern=. --coverage",
-    "docs:dev": "vuepress dev docs",
-    "docs:build": "vuepress build docs"
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "test": "jest",
+    "test:unit": "jest",
+    "cov": "jest --coverage",
+    "lint": "eslint . --ext .js --ext .vue --quiet --fix",
+    "type-check": "tsc --pretty --noEmit",
+    "docs:build": "vuepress build docs",
+    "docs:dev": "vuepress dev docs"
   },
   "dependencies": {
     "@mdi/font": "^4.5.95",
+    "@vuelidate/core": "^2.0.0-alpha.43",
+    "@vuelidate/validators": "^2.0.0-alpha.31",
     "axios": "^0.21.1",
     "clickout-event": "^1.1.2",
     "core-js": "^3.1.4",
@@ -29,56 +28,64 @@
     "lodash.uniqueid": "^4.0.1",
     "provinces": "^1.11.0",
     "regenerator-runtime": "^0.13.3",
-    "vue": "^2.6.11",
+    "vue": "^2.7.10",
     "vue-i18n": "^8.0.0",
+    "vue-i18n-composable": "^2.0.0",
     "vue-router": "^3.0.3",
     "vue2-filters": "^0.7.1",
-    "vuelidate": "^0.7.4",
+    "vue2-helpers": "^2.1.0",
     "vuetify": "^2.1.5",
     "vuex": "^3.1.2"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.18",
-    "@types/vuelidate": "^0.7.4",
-    "@typescript-eslint/eslint-plugin": "^2.3.1",
-    "@typescript-eslint/parser": "^2.3.1",
-    "@vue/cli-plugin-babel": "^4.1.1",
-    "@vue/cli-plugin-e2e-nightwatch": "^4.1.1",
-    "@vue/cli-plugin-eslint": "^4.1.1",
-    "@vue/cli-plugin-pwa": "^4.1.1",
-    "@vue/cli-plugin-typescript": "^4.1.1",
-    "@vue/cli-plugin-unit-jest": "^4.1.1",
-    "@vue/cli-service": "^4.1.1",
-    "@vue/eslint-config-standard": "^4.0.0",
-    "@vue/eslint-config-typescript": "^4.0.0",
-    "@vue/test-utils": "1.0.0-beta.29",
-    "axios-mock-adapter": "^1.17.0",
-    "babel-core": "7.0.0-bridge.0",
-    "babel-eslint": "^10.0.1",
-    "eslint": "^5.16.0",
-    "eslint-plugin-vue": "^5.2.3",
-    "jest-localstorage-mock": "^2.4.0",
-    "mutationobserver-shim": "^0.3.7",
-    "sass": "~1.32.12",
-    "sass-loader": "^7.2.0",
-    "ts-jest": "^24.0.2",
-    "typescript": "^3.7.3",
-    "vue-class-component": "^7.1.0",
-    "vue-cli-plugin-vuetify": "^2.0.3",
-    "vue-plugin-helper-decorator": "^0.0.11",
-    "vue-property-decorator": "^8.5.1",
-    "vue-template-compiler": "^2.6.10",
-    "vuepress": "^0.14.11",
-    "vuex-module-decorators": "^0.11.0"
+    "@types/jest": "^28.1.4",
+    "@types/node": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.30.3",
+    "@typescript-eslint/parser": "^5.30.3",
+    "@vitejs/plugin-vue2": "^1.1.2",
+    "@vue/eslint-config-standard": "^8.0.0",
+    "@vue/eslint-config-typescript": "^11.0.0",
+    "@vue/test-utils": "1.3.0",
+    "@vue/vue2-jest": "https://gitpkg.now.sh/FelixGraf/vue-jest/packages/vue2-jest?master",
+    "eslint": "^8.18.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.3",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-vue": "^9.1.1",
+    "husky": "^8.0.1",
+    "jest": "^28.1.2",
+    "jest-environment-jsdom": "^28.1.2",
+    "lint-staged": "^13.0.3",
+    "prettier": "^2.7.1",
+    "ts-jest": "^28.0.5",
+    "typescript": "^4.7.4",
+    "vite": "^3.0.0",
+    "vue-template-compiler": "2.7.10"
   },
-  "files": [
-    "dist/*",
-    "src/*",
-    "src/assets/*",
-    "src/assets/theme.scss",
-    "public/*",
-    "*.json",
-    "*.js"
-  ],
-  "main": "./dist/sbc-common-lib.common.js"
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testEnvironmentOptions": {
+      "customExportConditions": [
+        "node",
+        "node-addons"
+      ]
+    },
+    "transform": {
+      "^.+.ts$": "ts-jest",
+      "^.+.vue$": "@vue/vue2-jest"
+    },
+    "moduleFileExtensions": [
+      "js",
+      "ts",
+      "vue",
+      "json"
+    ],
+    "testMatch": [
+      "**/tests/unit/**/*.spec.[jt]s?(x)",
+      "**/test/**/*.ts",
+      "**/__tests__/**/*.spec.ts"
+    ]
+  }
 }

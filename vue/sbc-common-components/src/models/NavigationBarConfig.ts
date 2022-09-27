@@ -8,6 +8,7 @@ export interface NavigationMenuItem {
   url: string;
   mdiIcon?: string;
   meta: NavigationMenuItemMetaConfig
+  icon?: string
 }
 
 export interface NavigationMenuItemMetaConfig {

@@ -7,20 +7,12 @@
     </v-fade-transition>
   </div>
 </template>
-<script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator'
-
-Vue.extend({
-  name: 'loading-screen'
+<script setup lang="ts">
+defineProps({
+  isLoading: {
+    type: Boolean
+  }
 })
-
-@Component({
-
-})
-
-export default class LoadingScreen extends Vue {
-  @Prop() isLoading: boolean
-}
 </script>
 
 <style lang="scss" scoped>

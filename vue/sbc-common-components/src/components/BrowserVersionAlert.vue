@@ -8,7 +8,7 @@
         <v-card-text>
           <p>
             Internet Explorer 11 is no longer supported as it is coming to end-of-support by Microsoft starting on June 15, 2022.
-            Download one of following browsers for best experience.
+            Download one of following browsers for the best experience.
             <a href="https://docs.microsoft.com/en-us/lifecycle/announcements/internet-explorer-11-end-of-support" target="_blank">
               Learn more <v-icon class="text-decoration: none" color="primary" x-small>mdi-open-in-new</v-icon>
             </a>
@@ -70,25 +70,19 @@
   </v-overlay>
 </template>
 
-<script lang='ts'>
-import { Component, Prop, Vue } from 'vue-property-decorator'
-@Component({})
-export default class BrowserVersionAlert extends Vue {
-  private browserUnSupported: boolean = false
-  private isIE () {
-    return (window.navigator.userAgent.match(/MSIE|Trident/) !== null)
+<script setup lang='ts'>
+import { onMounted, ref } from 'vue'
+const browserUnSupported = ref(false)
+onMounted(() => {
+  if (window.navigator.userAgent.match(/MSIE|Trident/) !== null) {
+    browserUnSupported.value = true
   }
-  private async mounted () {
-    this.browserUnSupported = this.isIE()
-  }
-}
+})
 </script>
 
 <style lang="scss" scoped>
-  ::v-deep {
-    .v-alert__wrapper {
-      margin: 0 auto;
-      max-width: 1382px;
-    }
+:deep(.v-alert__wrapper) {
+    margin: 0 auto;
+    max-width: 1382px;
   }
 </style>

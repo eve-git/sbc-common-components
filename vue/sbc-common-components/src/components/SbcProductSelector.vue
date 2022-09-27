@@ -107,51 +107,28 @@
     </v-menu>
 </template>
 
-<script lang="ts">
-import Vue from 'vue'
-import { Component } from 'vue-property-decorator'
-import ConfigHelper from '../util/config-helper'
-import { Product, Products } from '../models/product'
-import { mapState, mapActions } from 'vuex'
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
+import { Product } from '../models/product'
 import ProductModule from '../store/modules/product'
-import { getModule } from 'vuex-module-decorators'
+import { useStore } from 'vue2-helpers/vuex'
 
-@Component({
-  name: 'SbcProductSelector',
-  beforeCreate () {
-    this.$store.isModuleRegistered = function (aPath: string[]) {
-      let m = (this as any)._modules.root
-      return aPath.every((p) => {
-        m = m._children[p]
-        return m
-      })
-    }
-    if (!this.$store.isModuleRegistered(['product'])) {
-      this.$store.registerModule('product', ProductModule)
-    }
-    this.$options.computed = {
-      ...(this.$options.computed || {}),
-      ...mapState('product', ['products', 'partners'])
-    }
-    this.$options.methods = {
-      ...(this.$options.methods || {}),
-      ...mapActions('product', ['syncProducts'])
-    }
-  }
+const productStore = useStore<ProductModule>()
+const dialog = ref(false)
+const products = computed(() => {
+  return productStore.state.products
 })
-export default class SbcProductSelector extends Vue {
-  private dialog = false
-  private readonly products!: Products
-  private readonly syncProducts!: () => Promise<void>
 
-  private async mounted () {
-    getModule(ProductModule, this.$store)
-    await this.syncProducts()
-  }
+const syncProducts = async (): Promise<void> => {
+  await productStore.getters.syncProducts()
+}
 
-  private goToProductPage (product: Product): void {
-    window.open(product.url, '_blank')
-  }
+onMounted(async () => {
+  await productStore.getters.syncProducts()
+})
+
+const goToProductPage = (product: Product): void => {
+  window.open(product.url, '_blank')
 }
 </script>
 

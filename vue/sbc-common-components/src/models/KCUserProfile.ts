@@ -1,3 +1,6 @@
+export interface UserTerms {
+    isTermsOfUseAccepted: boolean
+}
 export interface KCUserProfile {
     lastName: string;
     firstName: string;
@@ -7,4 +10,5 @@ export interface KCUserProfile {
     email: string;
     fullName: string;
     loginSource: string;
+    userTerms?: UserTerms
 }

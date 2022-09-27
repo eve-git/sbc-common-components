@@ -16,18 +16,9 @@
   </div>
 </template>
 
-<script lang="ts">
-import Vue from 'vue'
+<script setup lang="ts">
 import SbcHeader from './SbcHeader.vue'
 import SbcFooter from './SbcFooter.vue'
-
-export default Vue.extend({
-  name: 'sbc-layout',
-  components: {
-    SbcHeader,
-    SbcFooter
-  }
-})
 </script>
 
 <style lang="scss">

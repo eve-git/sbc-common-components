@@ -1,24 +1,30 @@
 <template>
-  <v-alert tile v-model="show" :type="type" :icon="icon" :dismissible="dismissible"><span v-html="message"></span></v-alert>
+  <v-alert tile :v-model="show" :type="type" :icon="icon" :dismissible="dismissible"><span v-html="message"></span></v-alert>
 </template>
 
-<script lang="ts">
-
-import Vue from 'vue'
-import Vuetify from 'vuetify'
-import { Component, Prop } from 'vue-property-decorator'
-
-@Component({})
-export default class SbcSystemBanner extends Vue {
-  @Prop({ default: '' }) message: string
-  @Prop({ default: 'warning' }) type: string // Accepted values are 'info', 'warning', 'danger', 'success',
-  @Prop({ default: 'mdi-information' }) icon: string // See https://material.io/resources/icons/?style=baseline for accepted values
-  @Prop({ default: false }) show: boolean
-  @Prop({ default: false }) dismissible: boolean
-
-  mounted () {
+<script setup lang="ts">
+import { PropType } from 'vue'
+defineProps({
+  message: {
+    type: String,
+    default: 'warning'
+  },
+  type: {
+    type: String as PropType<'info' | 'warning' | 'error' | 'success'>,
+    default: 'warning'
+  },
+  icon: {
+    type: String,
+    // See https://material.io/resources/icons/?style=baseline for accepted values
+    default: 'mdi-information'
+  },
+  show: {
+    type: Boolean
+  },
+  dismissible: {
+    type: Boolean
   }
-}
+})
 </script>
 
 <style lang="scss" scoped>
@@ -27,7 +33,7 @@ export default class SbcSystemBanner extends Vue {
   padding: 0;
 }
 
-.v-alert ::v-deep .v-alert__wrapper {
+.v-alert :deep(.v-alert__wrapper) {
   margin: 0 auto;
   padding: 1.25rem 0.75rem;
   overflow: hidden;

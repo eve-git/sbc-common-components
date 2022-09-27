@@ -38,7 +38,9 @@
                   <v-list-item-title class="font-weight-bold list-subtitle">{{item.title}}</v-list-item-title>
                   <v-list-item-subtitle>{{item.date}}</v-list-item-subtitle>
                   <v-spacer></v-spacer>
-                  <v-list-item-content v-html="item.description"></v-list-item-content>
+                  <v-list-item-content>
+                    <div v-html="item.description"/>
+                  </v-list-item-content>
                 </v-list-item-content>
                 </v-col>
               </v-row>
@@ -52,52 +54,25 @@
   </div>
 </template>
 
-<script lang='ts'>
-import { Component, Emit, Prop, Vue } from 'vue-property-decorator'
-import { Notification } from '../models/notification'
-import { mapState, mapActions } from 'vuex'
+<script setup lang='ts'>
 import NotificationModule from '../store/modules/notification'
-import { getModule } from 'vuex-module-decorators'
 import 'clickout-event'
+import { useStore } from 'vue2-helpers/vuex'
+import { computed } from 'vue'
 
-@Component({
-  name: 'NotificationPanel',
-  beforeCreate () {
-    this.$store.isModuleRegistered = function (aPath: string[]) {
-      let m = (this as any)._modules.root
-      return aPath.every((p) => {
-        m = m._children[p]
-        return m
-      })
-    }
-    if (!this.$store.isModuleRegistered(['notification'])) {
-      this.$store.registerModule('notification', NotificationModule)
-    }
-    this.$options.computed = {
-      ...(this.$options.computed || {}),
-      ...mapState('notification', ['notifications'])
-    }
-    this.$options.methods = {
-      ...(this.$options.methods || {}),
-      ...mapActions('notification', ['markAsRead'])
-    }
+const notificationStore = useStore<NotificationModule>()
+
+defineProps({
+  showNotifications: {
+    type: Boolean
   }
 })
-export default class NotificationPanel extends Vue {
-  private readonly notifications!: Notification[]
 
-  /** Prop to display the dialog. */
-  @Prop() showNotifications: boolean
+const emit = defineEmits(['closeNotifications'])
 
-  @Emit('closeNotifications')
-  private async emitClose () {
+const notifications = computed(() => notificationStore.state.notifications)
 
-  }
-
-  private async mounted () {
-    getModule(NotificationModule, this.$store)
-  }
-}
+const emitClose = () => emit('closeNotifications')
 </script>
 
 <style lang="scss" scoped>
@@ -107,16 +82,16 @@ export default class NotificationPanel extends Vue {
 //$app-notification-item-height: $app-notification-height/3;
 
 //@debug $app-notification-item-height;
-::v-deep ::-webkit-scrollbar {
+:deep(::-webkit-scrollbar) {
   width: 2px;
 }
 
-::v-deep ::-webkit-scrollbar-thumb {
+:deep(::-webkit-scrollbar-thumb) {
   background: black;
   border-radius: 20px;
 }
 
-::v-deep .v-navigation-drawer--right {
+:deep(.v-navigation-drawer--right) {
   transform: translatey($app-header-height) !important;
   height: 100vh;
 }
@@ -134,11 +109,11 @@ export default class NotificationPanel extends Vue {
   font-weight: bold;
 }
 
-::v-deep .v-btn:not(.dialog-close) .v-icon.v-icon {
+:deep(.v-btn:not(.dialog-close) .v-icon.v-icon) {
   font-size: $px-18 !important;
 }
 
-::v-deep .v-btn__content {
+:deep(.v-btn__content) {
   line-height: inherit;
 }
 

@@ -68,55 +68,59 @@
   </v-container>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Emit } from 'vue-property-decorator'
+<script setup lang="ts">
 import { IdpHint, LoginSource, Pages } from '../util/constants'
-import NavigationMixin from '../mixins/navigation-mixin'
-
-@Component({})
-export default class SbcAuthenticationOptions extends NavigationMixin {
-  @Prop({ default: '' }) redirectUrl!: string
-  @Prop({ default: false }) inAuth!: boolean
-  @Prop({ default: false }) isDialog!: boolean
-
-  private authOptions = [
-    {
-      type: LoginSource.BCSC,
-      title: 'BC Services Card',
-      description: `Residents of British Columbia can use their government-issued
-                BC Services Card to securly access BC Registries.`,
-      icon: 'mdi-account-card-details-outline',
-      btnLabel: 'Log in with BC Services Card',
-      idpHint: IdpHint.BCSC
-    },
-    {
-      type: LoginSource.BCEID,
-      title: 'BCeID',
-      description: `Non-BC residents and residents do not have a BC Services Card
-                can use a BCeID account to securly access BC Registries.`,
-      icon: 'mdi-two-factor-authentication',
-      btnLabel: 'Log in with BCeID',
-      idpHint: IdpHint.BCEID
-    }
-  ]
-
-  private selectAuthType (authOption) {
-    let signinRoute = `${Pages.SIGNIN}/${authOption.idpHint}`
-    if (this.redirectUrl?.trim()) {
-      signinRoute += `/${encodeURIComponent(this.redirectUrl.trim())}`
-    }
-    this.redirectInTriggeredApp(signinRoute)
+import { redirectInTriggeredApp, redirectToPath } from '../composables/navigation'
+const props = defineProps({
+  redirectUrl: {
+    type: String,
+    default: ''
+  },
+  inAuth: {
+    type: Boolean,
+    default: false
+  },
+  isDialog: {
+    type: Boolean,
+    default: false
   }
-
-  private goToCreateAccount () {
-    this.redirectToPath(this.inAuth, Pages.CHOOSE_AUTH_METHOD)
+})
+const emit = defineEmits(['close'])
+const authOptions = [
+  {
+    type: LoginSource.BCSC,
+    title: 'BC Services Card',
+    description: `Residents of British Columbia can use their government-issued
+              BC Services Card to securly access BC Registries.`,
+    icon: 'mdi-account-card-details-outline',
+    btnLabel: 'Log in with BC Services Card',
+    idpHint: IdpHint.BCSC
+  },
+  {
+    type: LoginSource.BCEID,
+    title: 'BCeID',
+    description: `Non-BC residents and residents do not have a BC Services Card
+              can use a BCeID account to securly access BC Registries.`,
+    icon: 'mdi-two-factor-authentication',
+    btnLabel: 'Log in with BCeID',
+    idpHint: IdpHint.BCEID
   }
-
-  /**
-   * Emits an event to the parent to close.
-   */
-  @Emit('close')
-  private emitClose (): void {}
+]
+const selectAuthType = (authOption) => {
+  let signinRoute = `${Pages.SIGNIN}/${authOption.idpHint}`
+  if (props.redirectUrl?.trim()) {
+    signinRoute += `/${encodeURIComponent(props.redirectUrl.trim())}`
+  }
+  redirectInTriggeredApp(signinRoute)
+}
+const goToCreateAccount = () => {
+  redirectToPath(props.inAuth, Pages.CHOOSE_AUTH_METHOD)
+}
+/**
+ * Emits an event to the parent to close.
+ */
+const emitClose = (): void => {
+  emit('close')
 }
 </script>
 

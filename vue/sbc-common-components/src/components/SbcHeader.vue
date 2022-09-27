@@ -335,15 +335,13 @@
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Mixins, Prop, Watch } from 'vue-property-decorator'
+<script setup lang="ts">
 import { initialize, LDClient } from 'launchdarkly-js-client-sdk'
 import { ALLOWED_URIS_FOR_PENDING_ORGS, Account, IdpHint, LoginSource, Pages, Role } from '../util/constants'
 import ConfigHelper from '../util/config-helper'
 import { mapState, mapActions, mapGetters } from 'vuex'
 import { UserSettings } from '../models/userSettings'
-import Vue from 'vue'
-import NavigationMixin from '../mixins/navigation-mixin'
+import Vue, { computed, onMounted, ref } from 'vue'
 import { getModule } from 'vuex-module-decorators'
 import AccountModule from '../store/modules/account'
 import AuthModule from '../store/modules/auth'
@@ -357,31 +355,45 @@ import NotificationPanel from './NotificationPanel.vue'
 import { AccountStatus, LDFlags } from '../util/enums'
 import NotificationModule from '../store/modules/notification'
 import { appendAccountId, trimTrailingSlashURL } from '../util/common-util'
+import { useStore } from 'vue2-helpers/vuex'
+import { redirectToPath } from '@/composables/navigation'
 
-declare module 'vuex' {
-  interface Store<S> {
-    isModuleRegistered(_: string[]): boolean
+const props = defineProps({
+  redirectOnLoginSuccess: {
+    type: String,
+    default: ''
+  },
+  redirectOnLoginFail: {
+    type: String,
+    default: ''
+  },
+  redirectOnLogout: {
+    type: String,
+    default: ''
+  },
+  inAuth: {
+    type: Boolean,
+    default: false
+  },
+  showProductSelector: {
+    type: Boolean,
+    default: false
+  },
+  showActions: {
+    type: Boolean,
+    default: true
+  },
+  showLoginMenu: {
+    type: Boolean,
+    default: true
+  },
+  dashboardReturnUrl: {
+    type: String,
+    default: ''
   }
-}
+})
 
-@Component({
-  beforeCreate () {
-    this.$store.isModuleRegistered = function (aPath: string[]) {
-      let m = (this as any)._modules.root
-      return aPath.every((p) => {
-        m = m._children[p]
-        return m
-      })
-    }
-    if (!this.$store.isModuleRegistered(['account'])) {
-      this.$store.registerModule('account', AccountModule)
-    }
-    if (!this.$store.isModuleRegistered(['auth'])) {
-      this.$store.registerModule('auth', AuthModule)
-    }
-    if (!this.$store.isModuleRegistered(['notification'])) {
-      this.$store.registerModule('notification', NotificationModule)
-    }
+/*
     this.$options.computed = {
       ...(this.$options.computed || {}),
       ...mapState('account', ['currentAccount', 'pendingApprovalCount', 'currentUser']),
@@ -399,255 +411,237 @@ declare module 'vuex' {
         'fetchNotificationUnreadCount',
         'syncNotifications'])
     }
+*/
+const accountStore = useStore<AccountModule>()
+const authStore = useStore<AuthModule>()
+const notificationStore = useStore<NotificationModule>()
+
+const ldClient = ref<LDClient>()
+
+const currentAccount = computed<UserSettings | null>(() => accountStore.state.currentAccount)
+const pendingApprovalCount = computed<number>(() => accountStore.state.pendingApprovalCount)
+const currentUser = computed<KCUserProfile | null>(() => accountStore.state.currentUser)
+const notificationCount = computed<number>(() => notificationStore.state.notificationCount)
+const notificationUnreadPriorityCount = computed<number>(() => notificationStore.state.notificationUnreadPriorityCount)
+const notificationUnreadCount = computed<number>(() => notificationStore.state.notificationUnreadCount)
+
+const accountName = computed<string>(() => accountStore.getters.accountName)
+const switchableAccounts = computed<UserSettings[]>(() => accountStore.getters.switchableAccounts)
+const username = computed<string>(() => accountStore.getters.username)
+const currentLoginSource = computed<string>(() => authStore.getters.currentLoginSource)
+const isAuthenticated = computed<boolean>(() => authStore.getters.isAuthenticated)
+
+// const loadUserInfo = () :  => accountStore.dispatch('loadUserInfo')
+// private readonly loadUserInfo!: () => KCUserProfile
+
+// private readonly syncAccount!: () => Promise<void>
+// private readonly syncCurrentAccount!: (userSettings: UserSettings) => Promise<UserSettings>
+// private readonly syncUserProfile!: () => Promise<void>
+// private readonly syncWithSessionStorage!: () => void
+
+// private readonly fetchNotificationUnreadPriorityCount!: () => Promise<void>
+// private readonly fetchNotificationUnreadCount!: () => Promise<void>
+// private readonly markAsRead!: () => Promise<void>
+// private readonly notificationCount!: number
+// private readonly fetchNotificationCount!: () => Promise<void>
+// private readonly syncNotifications!: () => Promise<void>
+
+const notificationPanel = ref<boolean>(false)
+const loginOptions = [
+  {
+    idpHint: IdpHint.BCSC,
+    option: 'BC Services Card',
+    icon: 'mdi-account-card-details-outline'
   },
-  components: {
-    SbcProductSelector,
-    BrowserVersionAlert,
-    MobileDeviceAlert,
-    NotificationPanel
+  {
+    idpHint: IdpHint.BCEID,
+    option: 'BCeID',
+    icon: 'mdi-two-factor-authentication'
+  },
+  {
+    idpHint: IdpHint.IDIR,
+    option: 'IDIR',
+    icon: 'mdi-account-group-outline'
   }
-})
-export default class SbcHeader extends Mixins(NavigationMixin) {
-  private ldClient!: LDClient
-  private readonly currentAccount!: UserSettings | null
-  private readonly pendingApprovalCount!: number
-  private readonly username!: string
-  private readonly accountName!: string
-  private readonly currentLoginSource!: string
-  private readonly isAuthenticated!: boolean
-  private readonly switchableAccounts!: UserSettings[]
-  private readonly loadUserInfo!: () => KCUserProfile
-  private readonly syncAccount!: () => Promise<void>
-  private readonly syncCurrentAccount!: (userSettings: UserSettings) => Promise<UserSettings>
-  private readonly syncUserProfile!: () => Promise<void>
-  private readonly syncWithSessionStorage!: () => void
-  private readonly currentUser!: any
-  private notificationPanel = false
-  private readonly notificationUnreadPriorityCount!: number
-  private readonly notificationUnreadCount!: number
-  private readonly fetchNotificationUnreadPriorityCount!: () => Promise<void>
-  private readonly fetchNotificationUnreadCount!: () => Promise<void>
-  private readonly markAsRead!: () => Promise<void>
-  private readonly notificationCount!: number
-  private readonly fetchNotificationCount!: () => Promise<void>
-  private readonly syncNotifications!: () => Promise<void>
+]
 
-  @Prop({ default: '' }) redirectOnLoginSuccess!: string;
-  @Prop({ default: '' }) redirectOnLoginFail!: string;
-  @Prop({ default: '' }) redirectOnLogout!: string;
-  @Prop({ default: false }) inAuth!: boolean;
-  @Prop({ default: false }) showProductSelector!: boolean;
-  @Prop({ default: true }) showActions!: boolean;
-  @Prop({ default: true }) showLoginMenu!: boolean;
-  @Prop({ default: '' }) dashboardReturnUrl !: string;
+//   const showTransactions = computed<boolean>(() => currentAccount.value?.accountType === Account.PREMIUM )
+//   // only for internal staff who belongs to bcreg
+//   const isStaff = computed<boolean>(() => currentUser.value && currentUser.value.roles.includes(Role.Staff))
+//   // only for GOVN type users
+//   const isGovmUser = computed<boolean>(() => currentUser.value && currentUser.value.roles.includes(Role.GOVMAccountUser))
+//   const isBceid = computed<boolean>(() => currentLoginSource.value === LoginSource.BCEID)
+//   const canCreateAccount = computed<boolean>(() => {
+//     // bcros  and idir can't create extra accounts themselves
+//     const disabledLogins:any = [LoginSource.BCROS.valueOf(), LoginSource.IDIR.valueOf()]
+//     if (this.disableBCEIDMultipleAccount) {
+//       disabledLogins.push(LoginSource.BCEID.valueOf())
+//     }
+//     return disabledLogins.indexOf(currentLoginSource.value) < 0
+//   })
 
-  private readonly loginOptions = [
-    {
-      idpHint: IdpHint.BCSC,
-      option: 'BC Services Card',
-      icon: 'mdi-account-card-details-outline'
-    },
-    {
-      idpHint: IdpHint.BCEID,
-      option: 'BCeID',
-      icon: 'mdi-two-factor-authentication'
-    },
-    {
-      idpHint: IdpHint.IDIR,
-      option: 'IDIR',
-      icon: 'mdi-account-group-outline'
-    }
-  ]
+//   const isBcscOrBceid = computed<boolean>(() => {
+//     return [LoginSource.BCSC.valueOf(), LoginSource.BCEID.valueOf()].indexOf(currentLoginSource.value) >= 0
+//   })
 
-  get showTransactions (): boolean {
-    return this.currentAccount?.accountType === Account.PREMIUM
-  }
+//   onMounted(() => {
+//     getModule(AccountModule, this.$store)
+//     getModule(AuthModule, this.$store)
+//     getModule(NotificationModule, this.$store)
 
-  // only for internal staff who belongs to bcreg
-  get isStaff (): boolean {
-    return this.currentUser && this.currentUser.roles.includes(Role.Staff)
-  }
+//     this.syncWithSessionStorage()
+//     if (isAuthenticated.value) {
+//       await this.loadUserInfo()
+//       await this.syncAccount()
+//       await this.updateProfile()
+//       // checking for account status
+//       await this.checkAccountStatus()
+//     }
 
-  // only for GOVN type users
-  get isGovmUser (): boolean {
-    return this.currentUser && this.currentUser.roles.includes(Role.GOVMAccountUser)
-  }
+//     // fetching what's new information, need to wait the notifications load and get the counts
+//     await this.syncNotifications()
+//     await this.fetchNotificationCount()
+//     await this.fetchNotificationUnreadPriorityCount()
+//     await this.fetchNotificationUnreadCount()
+//   }
 
-  get isBceid (): boolean {
-    return this.currentLoginSource === LoginSource.BCEID
-  }
+//   @Watch('isAuthenticated')
+//   private async onisAuthenticated (isAuthenitcated: string, oldVal: string) {
+//     if (isAuthenitcated.value) {
+//       await this.updateProfile()
+//     }
+//   }
 
-  get canCreateAccount (): boolean {
-    // bcros  and idir can't create extra accounts themselves
-    const disabledLogins:any = [LoginSource.BCROS.valueOf(), LoginSource.IDIR.valueOf()]
-    if (this.disableBCEIDMultipleAccount) {
-      disabledLogins.push(LoginSource.BCEID.valueOf())
-    }
-    return disabledLogins.indexOf(this.currentLoginSource) < 0
-  }
+//   const updateProfile = async () => {
+//     if (isBceid.value) {
+//       await this.syncUserProfile()
+//     }
+//   }
 
-  get isBcscOrBceid (): boolean {
-    return [LoginSource.BCSC.valueOf(), LoginSource.BCEID.valueOf()].indexOf(this.currentLoginSource) >= 0
-  }
+//   const goToHome = () => {
+//     // always bcros home page
+//     const url = appendAccountId(ConfigHelper.getRegistryHomeURL())
+//     // redirect to home page
+//     window.location.assign(url)
+//   }
 
-  private async mounted () {
-    getModule(AccountModule, this.$store)
-    getModule(AuthModule, this.$store)
-    getModule(NotificationModule, this.$store)
+//   const goToUserProfile = () => {
+//     const url = props.inAuth ? Pages.USER_PROFILE : appendAccountId(Pages.USER_PROFILE)
+//     redirectToPath(props.inAuth, url)
+//   }
 
-    this.syncWithSessionStorage()
-    if (this.isAuthenticated) {
-      await this.loadUserInfo()
-      await this.syncAccount()
-      await this.updateProfile()
-      // checking for account status
-      await this.checkAccountStatus()
-    }
+//   const goToCreateAccount = () => {
+//     redirectToPath(props.inAuth, Pages.CHOOSE_AUTH_METHOD)
+//   }
 
-    // fetching what's new information, need to wait the notifications load and get the counts
-    await this.syncNotifications()
-    await this.fetchNotificationCount()
-    await this.fetchNotificationUnreadPriorityCount()
-    await this.fetchNotificationUnreadCount()
-  }
+//   const goToCreateBCSCAccount = () => {
+//     const redirectUrl: string = props.dashboardReturnUrl ? `${Pages.CREATE_ACCOUNT}?redirectToUrl=${encodeURIComponent(props.dashboardReturnUrl)}` : Pages.CREATE_ACCOUNT
+//     redirectToPath(props.inAuth, redirectUrl)
+//   }
 
-  @Watch('isAuthenticated')
-  private async onisAuthenticated (isAuthenitcated: string, oldVal: string) {
-    if (isAuthenitcated) {
-      await this.updateProfile()
-    }
-  }
+//   const goToAccountInfo = async (settings: UserSettings) => {
+//     if (!currentAccount.value || !settings) {
+//       return
+//     }
+//     await this.syncCurrentAccount(settings)
+//     redirectToPath(props.inAuth, `${Pages.ACCOUNT}/${currentAccount.value.id}/${Pages.SETTINGS}/account-info`)
+//   }
 
-  private async updateProfile () {
-    if (this.isBceid) {
-      await this.syncUserProfile()
-    }
-  }
+//   const goToTeamMembers = () => {
+//     if (!currentAccount.value) {
+//       return
+//     }
+//     redirectToPath(props.inAuth, `${Pages.ACCOUNT}/${currentAccount.value.id}/${Pages.SETTINGS}/team-members`)
+//   }
 
-  private goToHome () {
-    // always bcros home page
-    const url = appendAccountId(ConfigHelper.getRegistryHomeURL())
-    // redirect to home page
-    window.location.assign(url)
-  }
+//   const goToTransactions = () => {
+//     if (!currentAccount.value) {
+//       return
+//     }
+//     redirectToPath(props.inAuth, `${Pages.ACCOUNT}/${currentAccount.value.id}/${Pages.SETTINGS}/transactions`)
+//   }
 
-  private goToUserProfile () {
-    const url = this.inAuth ? Pages.USER_PROFILE : appendAccountId(Pages.USER_PROFILE)
-    this.redirectToPath(this.inAuth, url)
-  }
+//   const checkAccountStatus = () => {
+//     // redirect if accoutn status is suspended
+//     if ([AccountStatus.NSF_SUSPENDED, AccountStatus.SUSPENDED].some(status => status === currentAccount.value?.accountStatus)) {
+//       redirectToPath(props.inAuth, `${Pages.ACCOUNT_FREEZ}`)
+//     } else if (currentAccount.value?.accountStatus === AccountStatus.PENDING_STAFF_REVIEW) {
+//       const targetPath = window.location.pathname
+//       const substringCheck = (element:string) => targetPath.indexOf(element) > -1
+//       // check if any of the url is the allowed uri
+//       const isAllowedUrl = ALLOWED_URIS_FOR_PENDING_ORGS.findIndex(substringCheck) > -1
+//       if (!isAllowedUrl) {
+//         const accountName = encodeURIComponent(btoa(this.accountName))
+//         redirectToPath(props.inAuth, `${Pages.PENDING_APPROVAL}/${accountName}/true`)
+//       }
+//     }
+//   }
 
-  private goToCreateAccount () {
-    this.redirectToPath(this.inAuth, Pages.CHOOSE_AUTH_METHOD)
-  }
+//   const switchAccount = async (settings: UserSettings, inAuth?: boolean) => {
+//     this.$emit('account-switch-started')
+//     if (this.$route.params.orgId) {
+//       // If route includes a URL param for account, we need to refresh with the new account id
+//       this.$router.push({ name: this.$route.name, params: { orgId: settings.id } })
+//     }
+//     await this.syncCurrentAccount(settings)
+//     this.$emit('account-switch-completed')
 
-  private goToCreateBCSCAccount () {
-    const redirectUrl: string = this.dashboardReturnUrl ? `${Pages.CREATE_ACCOUNT}?redirectToUrl=${encodeURIComponent(this.dashboardReturnUrl)}` : Pages.CREATE_ACCOUNT
-    this.redirectToPath(this.inAuth, redirectUrl)
-  }
+//     // passing current URL as redirect back URL from account switch page
+//     // So it will check all account conditions and redirect accordingly
+//     const currentURL = trimTrailingSlashURL(`${window.location.origin}${window.location.pathname}`)
 
-  private async goToAccountInfo (settings: UserSettings) {
-    if (!this.currentAccount || !settings) {
-      return
-    }
-    await this.syncCurrentAccount(settings)
-    this.redirectToPath(this.inAuth, `${Pages.ACCOUNT}/${this.currentAccount.id}/${Pages.SETTINGS}/account-info`)
-  }
+//     // @Prop({ default: false }) skipAccountSwitchRedirect!: boolean;
 
-  private goToTeamMembers () {
-    if (!this.currentAccount) {
-      return
-    }
-    this.redirectToPath(this.inAuth, `${Pages.ACCOUNT}/${this.currentAccount.id}/${Pages.SETTINGS}/team-members`)
-  }
+//     // skipAccountSwitchRedirect as prop and check here if need to avoid redirect to dashboard
+//     // handle all the condtion (like NFS/pending approval page) in own app when we are doing it
 
-  private goToTransactions () {
-    if (!this.currentAccount) {
-      return
-    }
-    this.redirectToPath(this.inAuth, `${Pages.ACCOUNT}/${this.currentAccount.id}/${Pages.SETTINGS}/transactions`)
-  }
+//     if (!inAuth) {
+//       window.location.assign(appendAccountId(`${ConfigHelper.getAuthContextPath()}/${Pages.ACCOUNT_SWITCHING}?redirectToUrl=${currentURL}`))
+//     }
+//   }
 
-  private checkAccountStatus () {
-    // redirect if accoutn status is suspended
-    if ([AccountStatus.NSF_SUSPENDED, AccountStatus.SUSPENDED].some(status => status === this.currentAccount?.accountStatus)) {
-      this.redirectToPath(this.inAuth, `${Pages.ACCOUNT_FREEZ}`)
-    } else if (this.currentAccount?.accountStatus === AccountStatus.PENDING_STAFF_REVIEW) {
-      const targetPath = window.location.pathname
-      const substringCheck = (element:string) => targetPath.indexOf(element) > -1
-      // check if any of the url is the allowed uri
-      const isAllowedUrl = ALLOWED_URIS_FOR_PENDING_ORGS.findIndex(substringCheck) > -1
-      if (!isAllowedUrl) {
-        const accountName = encodeURIComponent(btoa(this.accountName))
-        this.redirectToPath(this.inAuth, `${Pages.PENDING_APPROVAL}/${accountName}/true`)
-      }
-    }
-  }
+//   const logout = () => {
+//     if (this.redirectOnLogout) {
+//       const url = encodeURIComponent(this.redirectOnLogout)
+//       window.location.assign(`${this.getContextPath()}signout/${url}`)
+//     } else {
+//       window.location.assign(`${this.getContextPath()}signout`)
+//     }
+//   }
 
-  private async switchAccount (settings: UserSettings, inAuth?: boolean) {
-    this.$emit('account-switch-started')
-    if (this.$route.params.orgId) {
-      // If route includes a URL param for account, we need to refresh with the new account id
-      this.$router.push({ name: this.$route.name, params: { orgId: settings.id } })
-    }
-    await this.syncCurrentAccount(settings)
-    this.$emit('account-switch-completed')
+//   const login = (idpHint) => {
+//     if (this.redirectOnLoginSuccess) {
+//       let url = encodeURIComponent(this.redirectOnLoginSuccess)
+//       url += this.redirectOnLoginFail ? `/${encodeURIComponent(this.redirectOnLoginFail)}` : ''
+//       window.location.assign(`${this.getContextPath()}signin/${idpHint}/${url}`)
+//     } else {
+//       window.location.assign(`${this.getContextPath()}signin/${idpHint}`)
+//     }
+//   }
 
-    // passing current URL as redirect back URL from account switch page
-    // So it will check all account conditions and redirect accordingly
-    const currentURL = trimTrailingSlashURL(`${window.location.origin}${window.location.pathname}`)
+//   const getContextPath = (): string => {
+//     // [FAS] - Logout not redirecting to Login Screen#11120
+//     //  adeded default as /, if no base URL precent
+//     let baseUrl = (this.$router && (this.$router as any)['history'] && (this.$router as any)['history'].base) || '/'
+//     baseUrl += (baseUrl.length && baseUrl[baseUrl.length - 1] !== '/') ? '/' : ''
+//     return baseUrl
+//   }
 
-    // @Prop({ default: false }) skipAccountSwitchRedirect!: boolean;
+//   const closeNotificationPanel = async () => {
+//     this.notificationPanel = false
+//     if (this.notificationUnreadCount > 0) {
+//       await this.markAsRead()
+//     }
+//   }
 
-    // skipAccountSwitchRedirect as prop and check here if need to avoid redirect to dashboard
-    // handle all the condtion (like NFS/pending approval page) in own app when we are doing it
+//   const isWhatsNewOpen = computed<boolean>(() => {
+//     return LaunchDarklyService.getFlag(LDFlags.WhatsNew) || false
+//   })
 
-    if (!inAuth) {
-      window.location.assign(appendAccountId(`${ConfigHelper.getAuthContextPath()}/${Pages.ACCOUNT_SWITCHING}?redirectToUrl=${currentURL}`))
-    }
-  }
-
-  logout () {
-    if (this.redirectOnLogout) {
-      const url = encodeURIComponent(this.redirectOnLogout)
-      window.location.assign(`${this.getContextPath()}signout/${url}`)
-    } else {
-      window.location.assign(`${this.getContextPath()}signout`)
-    }
-  }
-
-  login (idpHint) {
-    if (this.redirectOnLoginSuccess) {
-      let url = encodeURIComponent(this.redirectOnLoginSuccess)
-      url += this.redirectOnLoginFail ? `/${encodeURIComponent(this.redirectOnLoginFail)}` : ''
-      window.location.assign(`${this.getContextPath()}signin/${idpHint}/${url}`)
-    } else {
-      window.location.assign(`${this.getContextPath()}signin/${idpHint}`)
-    }
-  }
-
-  private getContextPath (): string {
-    // [FAS] - Logout not redirecting to Login Screen#11120
-    //  adeded default as /, if no base URL precent
-    let baseUrl = (this.$router && (this.$router as any)['history'] && (this.$router as any)['history'].base) || '/'
-    baseUrl += (baseUrl.length && baseUrl[baseUrl.length - 1] !== '/') ? '/' : ''
-    return baseUrl
-  }
-
-  private async closeNotificationPanel () {
-    this.notificationPanel = false
-    if (this.notificationUnreadCount > 0) {
-      await this.markAsRead()
-    }
-  }
-
-  private get isWhatsNewOpen (): boolean {
-    return LaunchDarklyService.getFlag(LDFlags.WhatsNew) || false
-  }
-
-  private get disableBCEIDMultipleAccount (): boolean {
-    return LaunchDarklyService.getFlag(LDFlags.DisableBCEIDMultipleAccount) || false
-  }
-}
+//   const disableBCEIDMultipleAccount = computed<boolean>(() => {
+//     return LaunchDarklyService.getFlag(LDFlags.DisableBCEIDMultipleAccount) || false
+//   })
+// }
 </script>
 
 <style lang="scss" scoped>

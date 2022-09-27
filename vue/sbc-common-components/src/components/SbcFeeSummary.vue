@@ -10,14 +10,13 @@
 
     <v-slide-y-transition group tag="ul" class="fee-list" v-show="!fetchError">
       <template
-        v-show="(totalFilingFees > 0 && lineItem.fee) || (totalFilingFees == 0)"
         v-for="lineItem in fees"
         >
         <li class="container fee-list__item"
           :key="lineItem.filingType"
           >
           <div class="fee-list__item-name">{{filingLabel ? filingLabel : lineItem.filingType}}</div>
-          <div class="fee-list__item-value" v-if="lineItem.fee > 0">{{lineItem.fee | currency}}</div>
+          <div class="fee-list__item-value" v-if="lineItem.fee > 0">{{lineItem.fee}}</div>
           <div class="fee-list__item-value" v-else>No Fee</div>
         </li>
         <li class="container fee-list__item"
@@ -25,21 +24,21 @@
           :key="lineItem.filingType+'-priority'"
           >
           <div class="fee-list__item-name pl-3">Priority Fee</div>
-          <div class="fee-list__item-value">{{lineItem.priorityFees | currency}}</div>
+          <div class="fee-list__item-value">{{lineItem.priorityFees}}</div>
         </li>
         <li class="container fee-list__item"
           v-if="lineItem.futureEffectiveFees"
           :key="lineItem.filingType+'-futureEffective'"
           >
           <div class="fee-list__item-name pl-3">Future Effective Fee</div>
-          <div class="fee-list__item-value">{{lineItem.futureEffectiveFees | currency}}</div>
+          <div class="fee-list__item-value">{{lineItem.futureEffectiveFees}}</div>
         </li>
         <li class="container fee-list__item"
           v-if="lineItem.serviceFees"
           :key="lineItem.filingType+'-transaction'"
           >
           <div class="fee-list__item-name pl-3">Service Fee</div>
-          <div class="fee-list__item-value">{{lineItem.serviceFees | currency}}</div>
+          <div class="fee-list__item-value">{{lineItem.serviceFees}}</div>
         </li>
       </template>
     </v-slide-y-transition>
@@ -49,75 +48,46 @@
       <div class="fee-total__currency">CAD</div>
       <div class="fee-total__value">
         <v-slide-y-reverse-transition name="slide" mode="out-in">
-          <div>{{totalFilingFees | currency}}</div>
+          <div>{{totalFilingFees}}</div>
         </v-slide-y-reverse-transition>
       </div>
     </div>
   </v-card>
 </template>
 
-<script lang="ts">
-import { Vue, Component, Prop, Watch, Emit } from 'vue-property-decorator'
+<script setup lang="ts">
 import '../plugins/vuetify'
 import FeeServices from '../services/fee.services'
 import { Fee, FilingData } from '../models'
-
-@Component({})
-export default class SbcFeeSummary extends Vue {
+import { computed, PropType, ref, watch } from 'vue'
+const props = defineProps({
   /* This prop is an array of filing data. See model for details. */
-  @Prop({ default: [] })
-  private filingData!: Array<FilingData>
-
-  @Prop({ default: '' })
-  private payURL!: string
-
-  @Prop()
-  private filingLabel!: string
-
-  /* class properties */
-  private fees: Fee[] = []
-  private fetchError: string = ''
-
-  /* lifecycle event */
-  private mounted (): void {
-    // console.log('%c FeeModule-Data Received on Mount as %s %s', 'color: blue; font-size: 12px',
-    //   JSON.stringify(this.filingData), this.payURL)
-
-    FeeServices.getFee(this.filingData, this.payURL)
-      .then(data => {
-        this.fetchError = ''
-        this.fees = data
-        this.emitTotalFee(this.totalFilingFees)
-      })
-      .catch((error: any) => {
-        this.fetchError = 'Error fetching fees' + error
-      })
+  filingData: {
+    type: Array as PropType<Array<FilingData>>,
+    default: () => []
+  },
+  payURL: {
+    type: String
+  },
+  filingLabel: {
+    type: String
   }
-
-  /* getter */
-  private get totalFilingFees (): number {
-    return this.fees.reduce((acc: number, item: Fee) => acc + item.total, 0)
-  }
-
-  /* watcher */
-  @Watch('filingData')
-  private onFilingDataChanged (val: string, oldVal: string): void {
-    // console.log('%c FeeModule-Watch Activated as %s', 'color: blue; font-size: 12px',
-    //   JSON.stringify(this.filingData))
-
-    FeeServices.getFee(this.filingData, this.payURL).then((data: any) => {
-      this.fetchError = ''
-      this.fees = data
-      this.emitTotalFee(this.totalFilingFees)
-    }).catch((error: any) => {
-      this.fetchError = 'Error fetching fees' + error
+})
+const emit = defineEmits(['total-fee'])
+const fees = ref<Fee[]>([])
+const fetchError = ref<string>('')
+const totalFilingFees = computed(() => fees.value.reduce((acc, fee) => acc + fee.total, 0))
+watch(props.filingData, (newVal, oldVal) => {
+  FeeServices.getFee(newVal, props.payURL)
+    .then(data => {
+      fetchError.value = ''
+      fees.value = data
+      emit('total-fee', totalFilingFees)
     })
-  }
-
-  /* emitter */
-  @Emit('total-fee')
-  private emitTotalFee (val: number): void {}
-}
+    .catch((error: any) => {
+      fetchError.value = 'Error fetching fees' + error
+    })
+}, { immediate: true })
 </script>
 
 <style lang="scss" scoped>

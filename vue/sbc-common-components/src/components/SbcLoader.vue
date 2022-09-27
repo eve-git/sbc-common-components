@@ -10,19 +10,21 @@
   </v-overlay>
 </template>
 
-<script lang="ts">
-import { Component, Prop } from 'vue-property-decorator'
-import Vue from 'vue'
-
-@Component({})
-export default class SbcLoader extends Vue {
-  @Prop({ default: false })
-  private show!: boolean
-  @Prop({ default: 'Account Switching In Progress' })
-  private message!: string
-  @Prop({ default: '' })
-  private progressColor!: string
-  private indeterminate = true
-  private zIndex = 9
-}
+<script setup lang="ts">
+import { ref } from 'vue'
+defineProps({
+  show: {
+    type: Boolean
+  },
+  message: {
+    type: String,
+    default: 'Account Switching In Progress'
+  },
+  progressColor: {
+    type: String,
+    default: ''
+  }
+})
+const indeterminate = ref<boolean>(true)
+const zIndex = ref<number>(9)
 </script>

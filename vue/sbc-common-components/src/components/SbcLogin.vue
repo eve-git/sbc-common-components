@@ -39,18 +39,14 @@
   </v-container>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator'
+<script setup lang="ts">
 import SbcAuthMenu from './SbcAuthMenu.vue'
-
-@Component({
-  components: {
-    SbcAuthMenu
+const props = defineProps({
+  redirectUrl: {
+    type: String,
+    default: ''
   }
 })
-export default class Login extends Vue {
-  @Prop({ default: '' }) redirectUrl!: string
-}
 </script>
 
 <style lang="scss" scoped>

@@ -1,13 +1,11 @@
 import Vue from 'vue'
 import Vuetify from 'vuetify'
-import Vuelidate from 'vuelidate'
 import { createLocalVue, mount, shallowMount, Wrapper } from '@vue/test-utils'
 import StatusService from '../../src/services/status.services'
 import SbcSystemAlert from '@/components/SbcSystemAlert.vue'
 import Vuex from 'vuex'
 
 Vue.use(Vuetify)
-Vue.use(Vuelidate)
 // suppress "avoid mutating a prop directly" warnings
 // https://vue-test-utils.vuejs.org/api/config.html#silent
 Vue.config.silent = true

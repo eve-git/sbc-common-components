@@ -43,29 +43,14 @@
   </v-row>
 </template>
 
-<script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator'
-
-@Component({})
-export default class MobileDeviceAlert extends Vue {
-  private mobileDevice: boolean = false
-
-  private isMobileDevice (): boolean {
-    if (
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      )
-    ) {
-      return true
-    }
-
-    return false
+<script setup lang="ts">
+import { onMounted, ref } from 'vue'
+const mobileDevice = ref(false)
+onMounted(() => {
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+    mobileDevice.value = true
   }
-
-  private async mounted () {
-    this.mobileDevice = this.isMobileDevice()
-  }
-}
+})
 </script>
 
 <style lang="scss" scoped>
