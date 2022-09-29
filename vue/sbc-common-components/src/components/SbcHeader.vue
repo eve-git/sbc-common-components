@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="d-flex">
     <header class="app-header" id="appHeader">
       <v-container class="justify-space-between">
         <a @click="goToHome()" class="brand">
