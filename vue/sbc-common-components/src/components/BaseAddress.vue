@@ -123,6 +123,7 @@
                     v-model="addressLocal.addressCountry"
                     :items="getCountries()"
                     :rules="[...rules.addressCountry, ...spaceRules]"
+                    v-on:change="resetRegion()"
           />
           <!-- special field to select AddressComplete country, separate from our model field -->
           <input type="hidden" :id="addressCountryId" :value="addressCountry" />
@@ -197,6 +198,10 @@ export default class BaseAddress extends Mixins(ValidationMixin, CountriesProvin
 
   @Prop({ default: false })
   readonly noPoBox: boolean
+
+  resetRegion() {
+    this.addressLocal['addressRegion'] = ''
+  }
 
   /** A local (working) copy of the address, to contain the fields edited by the component (ie, the model). */
   private addressLocal: object = {}
