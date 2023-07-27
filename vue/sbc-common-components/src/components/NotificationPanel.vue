@@ -1,122 +1,95 @@
 <template>
-  <div
-    v-if="showNotifications"
-    v-on:clickout="emitClose()"
-  >
-    <v-overlay></v-overlay>
-    <v-navigation-drawer
-      right
-      app
-      :width="440"
-    >
-      <v-app-bar
-        flat
-        outlined
-      >
-        <v-toolbar-title class="toolbar-title">What's New at BC Registries</v-toolbar-title>
-        <v-spacer></v-spacer>
-        <v-btn
-          icon
-          large
-          class="dialog-close"
-          @click="emitClose()"
-        >
-          <v-icon>mdi-close</v-icon>
+  <div v-if="showNotifications" v-on:clickout="emitClose()">
+    <v-overlay model-value persistent :z-index="1" scroll-strategy="none">
+    </v-overlay>
+    <v-navigation-drawer app location="right" :width="440">
+      <div class="app-bar">
+        <v-toolbar-title app class="toolbar-title pl-4 pt-4">What's New at BC Registries</v-toolbar-title>
+        <v-btn icon="mdi-close" variant="text" flat class="dialog-close" @click="emitClose()">
         </v-btn>
-      </v-app-bar>
+      </div>
       <v-list flat>
-        <v-list-item-group color="primary">
-          <template v-for="(item, i) in notifications">
-            <v-list-item :key="i">
+        <v-list-group color="primary">
+          <!-- eslint-disable-next-line -->
+          <template v-for="(item, i) in notifications" :key="i">
+            <v-list-item>
               <v-row dense>
                 <v-col class="d-flex" cols="1">
                   <span :class="!item.read && (item.priority ? 'dot-red' : 'dot-blue')">
                   </span>
                 </v-col>
                 <v-col>
-                <v-list-item-content>
-                  <v-list-item-title class="font-weight-bold list-subtitle">{{item.title}}</v-list-item-title>
-                  <v-list-item-subtitle>{{item.date}}</v-list-item-subtitle>
-                  <v-spacer></v-spacer>
-                  <v-list-item-content v-html="item.description"></v-list-item-content>
-                </v-list-item-content>
+                  <v-list-item>
+                    <v-list-item-title class="font-weight-bold list-subtitle">{{ item.title }}</v-list-item-title>
+                    <v-list-item-subtitle>{{ item.date }}</v-list-item-subtitle>
+                    <v-spacer></v-spacer>
+                    <!-- eslint-disable-next-line -->
+                    <v-list-item v-html="item.description"></v-list-item>
+                  </v-list-item>
                 </v-col>
               </v-row>
             </v-list-item>
             <v-divider v-if="i < notifications.length - 1" :key="`${i}-divider`"></v-divider>
           </template>
-        </v-list-item-group>
+        </v-list-group>
       </v-list>
     </v-navigation-drawer>
-
   </div>
 </template>
 
-<script lang='ts'>
-import { Component, Emit, Prop, Vue } from 'vue-property-decorator'
-import { Notification } from '../models/notification'
-import { mapState, mapActions } from 'vuex'
-import NotificationModule from '../store/modules/notification'
+<script lang="ts">
+import { Notification } from '../../src/models/notification'
+import NotificationModule from '../../src/store/modules/notification'
+import { computed, defineComponent, onMounted, reactive } from 'vue'
+import { useStore } from 'vuex'
 import { getModule } from 'vuex-module-decorators'
 import 'clickout-event'
 
-@Component({
+export default defineComponent({
   name: 'NotificationPanel',
-  beforeCreate () {
-    this.$store.isModuleRegistered = function (aPath: string[]) {
-      let m = (this as any)._modules.root
-      return aPath.every((p) => {
-        m = m._children[p]
-        return m
-      })
+  props: {
+    showNotifications: { default: false }
+  },
+  setup(props, { emit }) {
+    const store = useStore()
+    // set modules
+    if (!store.hasModule('notification'))
+      store.registerModule('notification', NotificationModule)
+
+    //state
+    const state = reactive({
+      notifications: computed(() => store.state.notification.notifications as Notification[])
+    })
+
+    onMounted(async () => {
+      getModule(NotificationModule, store)
+    })
+
+    const emitClose = (): void => {
+        emit('closeNotifications')
     }
-    if (!this.$store.isModuleRegistered(['notification'])) {
-      this.$store.registerModule('notification', NotificationModule)
-    }
-    this.$options.computed = {
-      ...(this.$options.computed || {}),
-      ...mapState('notification', ['notifications'])
-    }
-    this.$options.methods = {
-      ...(this.$options.methods || {}),
-      ...mapActions('notification', ['markAsRead'])
+    return {
+      ...props,  
+      ...state,
+      emitClose
     }
   }
 })
-export default class NotificationPanel extends Vue {
-  private readonly notifications!: Notification[]
-
-  /** Prop to display the dialog. */
-  @Prop() showNotifications: boolean
-
-  @Emit('closeNotifications')
-  private async emitClose () {
-
-  }
-
-  private async mounted () {
-    getModule(NotificationModule, this.$store)
-  }
-}
 </script>
 
 <style lang="scss" scoped>
-@import "../assets/scss/theme.scss";
+@import "../../src/assets/scss/theme.scss";
 
-//$app-notification-height: calc(100vh - $app-header-height);
-//$app-notification-item-height: $app-notification-height/3;
-
-//@debug $app-notification-item-height;
-::v-deep ::-webkit-scrollbar {
+:deep(::-webkit-scrollbar) {
   width: 2px;
 }
 
-::v-deep ::-webkit-scrollbar-thumb {
+:deep(::-webkit-scrollbar-thumb) {
   background: black;
   border-radius: 20px;
 }
 
-::v-deep .v-navigation-drawer--right {
+:deep(.v-navigation-drawer--right) {
   transform: translatey($app-header-height) !important;
   height: 100vh;
 }
@@ -124,21 +97,39 @@ export default class NotificationPanel extends Vue {
 .v-app-bar.v-toolbar.v-sheet {
   background-color: $app-notification-orange !important;
 }
+.app-bar {
+  background-color: $app-notification-orange !important;
+  height: 64px;
+  display:block;
+  border: thin solid rgba(0,0,0,.12);
+  border-radius: 0;
+}
 
 .dialog-close {
   position: absolute;
   top: 8px;
-  right: 15px;
-  margin-right: 70px;
+  right: 4px;
+  margin-right: 0px;
   z-index: 2;
   font-weight: bold;
 }
 
-::v-deep .v-btn:not(.dialog-close) .v-icon.v-icon {
+:deep(.v-btn:not(.dialog-close) .v-icon.v-icon) {
   font-size: $px-18 !important;
 }
+ .v-btn {
+  font-size: 20px;
+  color: inherit;
+  background-color: $app-notification-orange !important;
+  opacity: 70%;
+ }
+.v-icon {
+  font-size: 28px !important;
+  height: 28px;
+  opacity : 10%;
+}
 
-::v-deep .v-btn__content {
+:deep(.v-btn__content) {
   line-height: inherit;
 }
 

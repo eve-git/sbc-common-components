@@ -1,62 +1,35 @@
-import Vue from 'vue'
-import Vuetify, {
-  VAlert,
-  VContainer,
-  VIcon,
-  VBtn
-} from 'vuetify/lib'
+import '../assets/scss/test.scss'
+import '../assets/scss/theme.scss'
 
-Vue.use(Vuetify, {
-  components: {
-    VAlert,
-    VContainer,
-    VIcon,
-    VBtn
-  }
-})
+// Styles
+import '@mdi/font/css/materialdesignicons.css'
+import 'vuetify/styles'
+// Vuetify
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
 
-export default new Vuetify({
-  theme: {
-    options: {
-      customProperties: true
-    },
+export default createVuetify({
+theme: {
+    defaultTheme: 'light',
     themes: {
       light: {
-        grey: {
-          base: '#adb5bd',
-          lighten5: '#f8f9fa',
-          lighten4: '#f1f3f5',
-          lighten3: '#e9ecef',
-          lighten2: '#dee2e6',
-          lighten1: '#ced4da',
-          darken1: '#868e96',
-          darken2: '#495057',
-          darken3: '#343a40',
-          darken4: '#212529'
-        },
-        bcgovblue: {
-          base: '#003366',
-          lighten5: '#e0e7ed',
-          lighten4: '#b3c2d1',
-          lighten3: '#8099b3',
-          lighten2: '#4d7094',
-          lighten1: '#26527d',
-          darken1: '#1e1e1f',
-          darken2: '#002753',
-          darken3: '#002049',
-          darken4: '#001438'
-        },
-        bcgovblue2: {
-          base: '#38598A'
-        },
-        bcgovblueLink: {
-          base: '#1A5A96'
-        },
-        bcgovgold: {
-          base: '#fcba19'
+        colors: {
+          primary: '#1669bb',
+          error: '#D3272C',
+          grey: '#adb5bd',
+          bcgovblue: '#003366',
+          bcgovblue2: '#38598A',
+          bcgovblueLink: '#1A5A96',
+          bcgovgold: '#fcba19',
+          navBg: '#001438',
+          navMenuBg: '#26527d',
+          anchor: '#1A5A96'
         }
       }
-
     }
-  }
+  },
+  components,
+  directives
 })
+// https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides

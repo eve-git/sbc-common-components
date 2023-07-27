@@ -1,11 +1,15 @@
-import Keycloak, { KeycloakInitOptions, KeycloakInstance, KeycloakLoginOptions, KeycloakTokenParsed } from 'keycloak-js'
-import { KCUserProfile } from '../models/KCUserProfile'
-import ConfigHelper from '../util/config-helper'
-import { SessionStorageKeys } from '../util/constants'
+/* eslint-disable */
+// External
+import Keycloak, { KeycloakInitOptions, KeycloakInstance, KeycloakLoginOptions } from 'keycloak-js'
 import { Store } from 'vuex'
 import { getModule } from 'vuex-module-decorators'
+// BC Registry
+import { KCUserProfile } from '../../src/models/KCUserProfile'
+import ConfigHelper from '../../src/util/config-helper'
+import { SessionStorageKeys } from '../../src/util/constants'
+import { decodeKCToken } from '../../src/util/common-util'
+// Local
 import AuthModule from '../store/modules/auth'
-import { decodeKCToken } from '../util/common-util'
 
 class KeyCloakService {
   private kc: KeycloakInstance | undefined
@@ -105,7 +109,6 @@ class KeyCloakService {
         idToken: ConfigHelper.getFromSession(SessionStorageKeys.KeyCloakIdToken) || undefined,
         pkceMethod: 'S256'
       }
-      const siteminderLogoutUrl = ConfigHelper.getFromSession(SessionStorageKeys.SiteminderLogoutUrl) || undefined
       // Here we clear session storage, and add a flag in to prevent the app from
       // putting tokens back in from returning async calls  (see #2341)
       ConfigHelper.clearSession()
@@ -117,9 +120,6 @@ class KeyCloakService {
               resolve()
             }
             redirectUrl = redirectUrl || `${window.location.origin}${process.env.VUE_APP_PATH}`
-            if (siteminderLogoutUrl?.includes('http')) {
-              redirectUrl = `${siteminderLogoutUrl}?returl=${redirectUrl.replace(/(https?:\/\/)|(\/)+/g, '$1$2')}&retnow=1`
-            }
             this.kc && this.kc.logout({ redirectUri: redirectUrl })
               .then(() => {
                 resolve()
