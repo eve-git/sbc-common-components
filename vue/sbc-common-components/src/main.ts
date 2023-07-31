@@ -12,7 +12,7 @@ declare const window: any
 
 // main code
 async function start () {
-  console.info('Version', process.env.VUE_APP_VERSION)
+  // console.info('Version', process.env.VUE_APP_VERSION) TODO: FIX
   // fetch config from environment and API
   // must come first as inits below depend on config
   const router = createVueRouter()
@@ -30,8 +30,6 @@ async function start () {
 
   // start Vue application
   console.info('Starting app...') // eslint-disable-line no-console
-  debugger
-  const go = store
   app.use(router).use(store).use(vuetify).mount('#app')
 }
 

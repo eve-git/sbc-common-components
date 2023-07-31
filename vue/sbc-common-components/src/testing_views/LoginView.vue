@@ -1,21 +1,21 @@
 <template>
   <div>
-    <h1 class="pageTitle">Login</h1>
+    <h1 class="pageTitle">
+      Login
+    </h1>
     <SbcLogin :redirectUrl="redirectUrl" />
   </div>
 </template>
 
 <script lang="ts">
-// Libraries
 import { defineComponent, ref } from 'vue'
-// Components
 import SbcLogin from '../../src/components/SbcLogin.vue'
 
 export default defineComponent({
   components: {
     SbcLogin
   },
-  setup() {
+  setup () {
     const redirectUrl = ref('')
 
     return {
