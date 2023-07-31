@@ -8,7 +8,7 @@
       max-width="720px"
       persistent
     >
-    <v-card>
+      <v-card>
         <v-card-title>
           <div>Unsupported Browser</div>
         </v-card-title>
@@ -40,7 +40,7 @@
               <v-card class="elevation-0">
                 <v-card-title>
                   <v-img
-                  :src= "require('../../src/assets/img/edge.png')"
+                    :src="edgeUrl"
                     max-height="60"
                     max-width="60"
                   />
@@ -57,7 +57,7 @@
               <v-card class="elevation-0">
                 <v-card-title>
                   <v-img
-                  :src= "require('../../src/assets/img/chrome.png')"
+                    :src="chromeUrl"
                     max-height="60"
                     max-width="60"
                   />
@@ -74,7 +74,7 @@
               <v-card class="elevation-0">
                 <v-card-title>
                   <v-img
-                  :src= "require('../../src/assets/img/firefox.png')"
+                    :src="firefoxUrl"
                     max-height="60"
                     max-width="60"
                   />
@@ -91,7 +91,7 @@
               <v-card class="elevation-0">
                 <v-card-title>
                   <v-img
-                    :src= "require('../../src/assets/img/safari.png')"
+                    :src="safariUrl"
                     max-height="60"
                     max-width="60"
                   />
@@ -107,19 +107,36 @@
 </template>
 
 <script lang="ts">
-import { onMounted, defineComponent, ref } from 'vue'
+import edgeUrl from '../assets/img/edge.png'
+import chromeUrl from '../assets/img/chrome.png'
+import firefoxUrl from '../assets/img/firefox.png'
+import safariUrl from '../assets/img/safari.png'
+import { onMounted, defineComponent, ref, watch } from 'vue'
 
 export default defineComponent({
   name: 'BrowserVersionAlert',
-  setup () {
+  props: {
+    triggerPopup: {
+      type: Boolean,
+      default: false
+    }
+  },
+  setup (props) {
     const browserUnSupported = ref(false)
-        onMounted(() => {
+    onMounted(() => {
       if (window.navigator.userAgent.match(/MSIE|Trident/) !== null) {
         browserUnSupported.value = true
       }
     })
+    watch(() => props.triggerPopup, (val) => {
+      browserUnSupported.value = val
+    })
     return {
-      browserUnSupported
+      browserUnSupported,
+      edgeUrl,
+      chromeUrl,
+      firefoxUrl,
+      safariUrl
     }
   }
 })

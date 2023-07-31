@@ -1,15 +1,19 @@
 <template>
   <div>
-    <h1 class="pageTitle" style="position: absolute;">Loading Screen</h1>
+    <h1
+      class="pageTitle"
+      style="position: absolute;"
+    >
+      Loading Screen
+    </h1>
     <div>
-      <LoadingScreen :isLoading="true"></LoadingScreen>
+      <LoadingScreen :isLoading="true" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-// Components
 import LoadingScreen from '../../src/components/LoadingScreen.vue'
 
 export default defineComponent({
@@ -17,7 +21,7 @@ export default defineComponent({
     LoadingScreen
   },
   computed: {
-    redirectUrl() {
+    redirectUrl () {
       return (this.$route.query.redirect as string)
     }
   }
