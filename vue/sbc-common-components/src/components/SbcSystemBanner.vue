@@ -1,6 +1,6 @@
 <template>
   <v-alert
-    v-model="show"
+    v-model="showBanner"
     class="py-2"
     :type="type"
     close-icon="mdi-close-circle mdi-24px mt-3"
@@ -13,32 +13,19 @@
   </v-alert>
 </template>
 
-<script lang="ts">
-// External
-import { computed, defineComponent, reactive } from 'vue'
+<script setup lang="ts">
+import { computed } from 'vue'
 
-export default defineComponent({
-  name: 'SbcSystemBanner',
-  props: {
-    setDismissible: { default: false, type: Boolean },
-    setIcon: { default: 'mdi-information', type: String }, // See https://material.io/resources/icons/?style=baseline
-    setMessage: { default: '', type: String },
-    setShow: { default: false, type: Boolean },
-    setType: { default: 'warning', type: String }
-  },
-  setup (props) {
-    const state = reactive({
-      dismissible: computed(() => { return props.setDismissible }),
-      icon: computed(() => { return props.setIcon }),
-      message: computed(() => { return props.setMessage }),
-      show: computed(() => { return props.setShow }),
-      type: computed(() => { return props.setType as 'info' | 'warning' | 'error' | 'success' })
-    })
-    return {
-      ...state
-    }
-  }
-})
+// Defaults don't apply here anymore, required to be set explicity
+const props = defineProps<{
+  dismissible: boolean,
+  icon: string, // See https://material.io/resources/icons/?style=baseline was mdi-information
+  message: string,
+  show: boolean,
+  type: 'error' | 'success' | 'warning' | 'info' // was 'warning'
+}>()
+
+const showBanner = computed(() => props.show)
 </script>
 
 <style lang="scss" scoped>
@@ -49,7 +36,7 @@ export default defineComponent({
 .close-icon{
   font-size: 30px;
 }
-.v-alert :deep(.v-alert__wrapper) {
+.v-alert :deep(.v-alert__wrap per) {
   margin: 0;
   overflow: hidden;
 }
