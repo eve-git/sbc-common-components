@@ -43,6 +43,7 @@ class QueueMessageTypes(Enum):
     PAD_INVOICE_CREATED = 'bc.registry.payment.pad.invoiceCreated'
     PAD_PAYMENT_SUCCESS = 'bc.registry.payment.PAD.PaymentSuccess'
     PAD_SETUP_FAILED = 'bc.registry.payment.PadSetupFailed'
+    PAYMENT = 'bc.registry.payment'
     PAYMENT_DUE_NOTIFICATION = 'bc.registry.payment.statementDueNotification'
     PAYMENT_PENDING = 'bc.registry.payment.ob.outstandingInvoice'
     PAYMENT_REMINDER_NOTIFICATION = 'bc.registry.payment.statementReminderNotification'
