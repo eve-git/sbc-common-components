@@ -5,7 +5,6 @@ class QueueMessageTypes(Enum):
 
     # Note some of these need to match inside of SubjectType in account_mailer.enums.
 
-    ACCOUNT_CONFIRMATION_PERIOD_OVER = 'bc.registry.payment.confirmationPeriodOver'
     ACTIVITY_LOG = 'bc.registry.auth.activity'
     ADMIN_NOTIFICATION = 'bc.registry.auth.adminNotification'
     ADMIN_REMOVED = 'bc.registry.auth.adminRemoved'
