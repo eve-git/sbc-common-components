@@ -26,8 +26,6 @@ class QueueMessageTypes(Enum):
     GOVM_MEMBER_INVITATION = 'bc.registry.auth.govmMemberInvitation'
     GOVM_REJECTED_NOTIFICATION = 'bc.registry.auth.govmRejectedNotification'
     INCORPORATION = 'bc.registry.business.incorporationApplication'
-    MAILER_PAYMENT_OVERPAID = 'bc.registry.payment.OverPaid'
-    MAILER_PAYMENT_UNDERPAID = 'bc.registry.payment.UnderPaid'
     MEMBERSHIP_APPROVED_NOTIFICATION = 'bc.registry.auth.membershipApprovedNotification'
     MEMBERSHIP_APPROVED_NOTIFICATION_FOR_BCEID = 'bc.registry.auth.membershipApprovedNotificationForBceid'
     NAMES_EVENT = 'bc.registry.names.events'
