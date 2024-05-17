@@ -472,6 +472,7 @@ export default class SbcHeader extends Mixins(NavigationMixin) {
       case 'SANDBOX':
         return 'warning';
       default:
+        this.environment = ''
         return '';
     }
   }
