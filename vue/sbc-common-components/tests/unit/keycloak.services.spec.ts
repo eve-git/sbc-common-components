@@ -1,10 +1,10 @@
-import Axios from 'axios'
+import '@/composition-api-setup' // ensure this happens before any imports trigger use of composition-api
 import KeycloakService from '../../src/services/keycloak.services'
 import ConfigHelper from '../../src/util/config-helper'
 import { SessionStorageKeys } from '@/util/constants'
 
 vitest.mock('axios', async () => {
-  const actual = await vi.importActual('axios')
+  const actual = await vitest.importActual('axios')
   return {
     ...actual,
     get: vitest.fn(),
@@ -33,9 +33,7 @@ describe('initialize keycloak', () => {
   const results = []
   beforeAll(() => {
     // @ts-ignore
-    Axios.get.mockClear()
-    // @ts-ignore
-    Axios.all.mockResolvedValue(results)
+    vitest.clearAllMocks()
   })
 
   it('should clear session storage ', () => {
@@ -48,9 +46,8 @@ describe('configuring keycloak', () => {
   const results = []
   beforeAll(() => {
     // @ts-ignore
-    Axios.get.mockClear()
+    vitest.clearAllMocks()
     // @ts-ignore
-    Axios.all.mockResolvedValue(results)
     KeycloakService.setKeycloakConfigUrl(KEYCLOAK_URL)
   })
   it('should set keycloak config url ', () => {

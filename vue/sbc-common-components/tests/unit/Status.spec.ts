@@ -1,13 +1,10 @@
+import '@/composition-api-setup' // ensure this happens before any imports trigger use of composition-api
 import Vue from 'vue'
 import Vuetify from 'vuetify'
-import Vuelidate from 'vuelidate'
-import { createLocalVue, mount, shallowMount, Wrapper } from '@vue/test-utils'
+import { shallowMount } from '@vue/test-utils'
 import StatusService from '../../src/services/status.services'
 import SbcSystemAlert from '@/components/SbcSystemAlert.vue'
-import Vuex from 'vuex'
 
-Vue.use(Vuetify)
-Vue.use(Vuelidate)
 // suppress "avoid mutating a prop directly" warnings
 // https://vue-test-utils.vuejs.org/api/config.html#silent
 Vue.config.silent = true
@@ -38,7 +35,7 @@ describe('SbcSystemAlert.vue', () => {
     expect(wrapper.props().serviceData).toBe(serviceData)
     expect(wrapper.props().statusURL).toBe('https://status-api-dev.pathfinder.gov.bc.ca/api/v1/')
 
-    Vue.nextTick(async () => {
+    Vue.nextTick(() => {
       expect(wrapper.vm.isSbcSystemDown).toBeTruthy()
       expect(wrapper.vm.alertMessage).toBe('Payment service unavailable')
 
@@ -57,8 +54,7 @@ describe('SbcSystemAlert.vue', () => {
     })
 
     expect(StatusService.getServiceStatus).toBeCalled()
-    Vue.nextTick(async () => {
-      console.log('sbcsystemdown: ', wrapper.vm.$data.isSbcSystemDown)
+    Vue.nextTick(() => {
       expect(wrapper.vm.isSbcSystemDown).toBeFalsy()
       expect(wrapper.vm.alertMessage).toBe('Payment service unavailable')
 

@@ -11,7 +11,7 @@
               <source media="(max-width: 600px)" srcset="../assets/img/gov_bc_logo_vert.png">
               <img class="brand__image" src="../assets/img/gov_bc_logo_vert.png" alt="Government of British Columbia Logo" title="Government of British Columbia">
             </picture>
-            <span class="brand__title">Service<span class="brand__title--bc">BC</span> <span class="brand__title--wrap">Connect</span></span>
+            <span class="brand__title">BC Registries <span class="brand__title--wrap">and Online Services</span></span>
           </a>
           <!-- Environment Alert -->
           <v-alert v-if="environment" :color="alertColor" dense class="env-distinction">
@@ -165,7 +165,7 @@
             attach="#appHeader"
             v-if="isAuthenticated"
           >
-            <template v-slot:activator="{ on }">
+            <template #activator="{ on }">
               <v-btn
                 large
                 text
@@ -342,13 +342,12 @@ import { Component, Mixins, Prop, Watch } from 'vue-property-decorator'
 import { initialize, LDClient } from 'launchdarkly-js-client-sdk'
 import { ALLOWED_URIS_FOR_PENDING_ORGS, Account, IdpHint, LoginSource, Pages, Role } from '../util/constants'
 import ConfigHelper from '../util/config-helper'
-import { mapState, mapActions, mapGetters } from 'vuex'
+import { useAccountStore } from '../stores/account'
+import { useAuthStore } from '../stores/auth'
+import { useNotificationStore } from '../stores/notification'
+import { mapState, mapActions, mapGetters, getActivePinia } from 'pinia'
 import { UserSettings } from '../models/userSettings'
-import Vue from 'vue'
 import NavigationMixin from '../mixins/navigation-mixin'
-import { getModule } from 'vuex-module-decorators'
-import AccountModule from '../store/modules/account'
-import AuthModule from '../store/modules/auth'
 import { KCUserProfile } from '../models/KCUserProfile'
 import keycloakService from '../services/keycloak.services'
 import LaunchDarklyService from '../services/launchdarkly.services'
@@ -357,58 +356,32 @@ import MobileDeviceAlert from './MobileDeviceAlert.vue'
 import SbcProductSelector from './SbcProductSelector.vue'
 import NotificationPanel from './NotificationPanel.vue'
 import { AccountStatus, LDFlags } from '../util/enums'
-import NotificationModule from '../store/modules/notification'
 import { appendAccountId, trimTrailingSlashURL } from '../util/common-util'
-
-declare module 'vuex' {
-  interface Store<S> {
-    isModuleRegistered(_: string[]): boolean
-  }
-}
 
 @Component({
   beforeCreate () {
-    this.$store.isModuleRegistered = function (aPath: string[]) {
-      let m = (this as any)._modules.root
-      return aPath.every((p) => {
-        m = m._children[p]
-        return m
-      })
-    }
-    if (!this.$store.isModuleRegistered(['account'])) {
-      this.$store.registerModule('account', AccountModule)
-    }
-    if (!this.$store.isModuleRegistered(['auth'])) {
-      this.$store.registerModule('auth', AuthModule)
-    }
-    if (!this.$store.isModuleRegistered(['notification'])) {
-      this.$store.registerModule('notification', NotificationModule)
-    }
-    this.$options.computed = {
-      ...(this.$options.computed || {}),
-      ...mapState('account', ['currentAccount', 'pendingApprovalCount', 'currentUser']),
-      ...mapState('notification', ['notificationCount', 'notificationUnreadPriorityCount', 'notificationUnreadCount']),
-      ...mapGetters('account', ['accountName', 'switchableAccounts', 'username']),
-      ...mapGetters('auth', ['isAuthenticated', 'currentLoginSource'])
-    }
-    this.$options.methods = {
-      ...(this.$options.methods || {}),
-      ...mapActions('account', ['loadUserInfo', 'syncAccount', 'syncCurrentAccount', 'syncUserProfile']),
-      ...mapActions('auth', ['syncWithSessionStorage']),
-      ...mapActions('notification', ['markAsRead',
-        'fetchNotificationCount',
-        'fetchNotificationUnreadPriorityCount',
-        'fetchNotificationUnreadCount',
-        'syncNotifications'])
-    }
+  this.$options.computed = {
+  ...(this.$options.computed || {}),
+  ...mapState(useAccountStore, ['currentAccount', 'pendingApprovalCount', 'currentUser']),
+  ...mapState(useNotificationStore, ['notificationCount', 'notificationUnreadPriorityCount', 'notificationUnreadCount']),
+  ...mapGetters(useAccountStore, ['accountName', 'switchableAccounts', 'username']),
+  ...mapGetters(useAuthStore, ['isAuthenticated', 'currentLoginSource'])
+  }
+  this.$options.methods = {
+  ...(this.$options.methods || {}),
+  ...mapActions(useAccountStore, ['loadUserInfo', 'syncAccount', 'syncCurrentAccount', 'syncUserProfile']),
+  ...mapActions(useAuthStore, ['syncWithSessionStorage']),
+  ...mapActions(useNotificationStore, ['markAsRead', 'fetchNotificationCount', 'fetchNotificationUnreadPriorityCount',
+    'fetchNotificationUnreadCount', 'syncNotifications'])
+  }
   },
   components: {
-    SbcProductSelector,
-    BrowserVersionAlert,
-    MobileDeviceAlert,
-    NotificationPanel
+  SbcProductSelector,
+  BrowserVersionAlert,
+  MobileDeviceAlert,
+  NotificationPanel
   }
-})
+  })
 export default class SbcHeader extends Mixins(NavigationMixin) {
   private ldClient!: LDClient
   private readonly currentAccount!: UserSettings | null
@@ -506,11 +479,9 @@ export default class SbcHeader extends Mixins(NavigationMixin) {
   }
 
   private async mounted () {
-    getModule(AccountModule, this.$store)
-    getModule(AuthModule, this.$store)
-    getModule(NotificationModule, this.$store)
-
-    this.syncWithSessionStorage()
+    if (getActivePinia()) {
+      this.syncWithSessionStorage()
+    }
     if (this.isAuthenticated) {
       await this.loadUserInfo()
       await this.syncAccount()
@@ -735,11 +706,11 @@ $app-header-font-color: #ffffff;
   overflow-y: scroll;
 
 }
-@media (max-width: 680px) {
-  .brand__title--wrap {
-    display: block;
-  }
-}
+//@media (max-width: 680px) { uncomment for sbc connect
+//  .brand__title--wrap {
+    //display: block;
+  //}
+//}
 
 @media (max-width: 900px) {
   .brand__image {
@@ -750,6 +721,9 @@ $app-header-font-color: #ffffff;
   .brand__title {
     font-size: 1rem;
     line-height: 1.25rem;
+  }
+  .brand__title--wrap { //Comment out for sbc connect
+    display: block;
   }
 }
 

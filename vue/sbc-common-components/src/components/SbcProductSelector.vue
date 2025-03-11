@@ -61,7 +61,7 @@
                   alt="Government of British Columbia Logo"
                   title="Government of British Columbia">
               </picture>
-              <span class="brand__title">Service<span class="brand__title--bc">BC</span> <span class="brand__title--wrap">Connect</span></span>
+              <span class="brand__title">BC Registries <span class="brand__title--wrap">and Online Services</span></span>
             </a>
             <div class="app-header__actions">
             </div>
@@ -73,7 +73,7 @@
               <v-icon>mdi-arrow-left</v-icon>
             </v-btn>
             <div>
-              <h1>Service BC Connect Products <span class="lb">and Services</span></h1>
+              <h1>BC Registries Products <span class="lb">and Services</span></h1>
               <p class="view-header__desc">Easy access to a wide range of information products and services, including access <span class="ls">to British Columbia Provincial and Municipal Government information.</span></p>
             </div>
             <div>
@@ -108,44 +108,31 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
-import { Component } from 'vue-property-decorator'
+import { Component, Vue } from 'vue-property-decorator'
 import ConfigHelper from '../util/config-helper'
 import { Product, Products } from '../models/product'
-import { mapState, mapActions } from 'vuex'
-import ProductModule from '../store/modules/product'
-import { getModule } from 'vuex-module-decorators'
+import { useProductsStore } from '../stores/product'
+import { mapState, mapActions } from 'pinia'
 
 @Component({
   name: 'SbcProductSelector',
   beforeCreate () {
-    this.$store.isModuleRegistered = function (aPath: string[]) {
-      let m = (this as any)._modules.root
-      return aPath.every((p) => {
-        m = m._children[p]
-        return m
-      })
-    }
-    if (!this.$store.isModuleRegistered(['product'])) {
-      this.$store.registerModule('product', ProductModule)
-    }
-    this.$options.computed = {
-      ...(this.$options.computed || {}),
-      ...mapState('product', ['products', 'partners'])
-    }
-    this.$options.methods = {
-      ...(this.$options.methods || {}),
-      ...mapActions('product', ['syncProducts'])
-    }
+  this.$options.computed = {
+  ...(this.$options.computed || {}),
+  ...mapState(useProductsStore, ['products', 'partners'])
   }
-})
+  this.$options.methods = {
+  ...(this.$options.methods || {}),
+  ...mapActions(useProductsStore, ['syncProducts'])
+  }
+  }
+  })
 export default class SbcProductSelector extends Vue {
   private dialog = false
   private readonly products!: Products
   private readonly syncProducts!: () => Promise<void>
 
   private async mounted () {
-    getModule(ProductModule, this.$store)
     await this.syncProducts()
   }
 
