@@ -489,6 +489,7 @@ export default class SbcHeader extends Mixins(NavigationMixin) {
       // checking for account status
       await this.checkAccountStatus()
     }
+    this.$emit('account-data-loaded')
 
     // fetching what's new information, need to wait the notifications load and get the counts
     await this.syncNotifications()
